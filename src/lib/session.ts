@@ -36,11 +36,12 @@ export async function submitVote(
   sessionId: string,
   showId: string,
   player: 1 | 2,
-  liked: boolean
+  liked: boolean,
+  voteType: "liked" | "skipped" | "not_tonight" = liked ? "liked" : "skipped"
 ) {
   const { error } = await supabase
     .from("votes")
-    .insert({ session_id: sessionId, show_id: showId, player, liked });
+    .insert({ session_id: sessionId, show_id: showId, player, liked, vote_type: voteType });
 
   if (error) throw error;
 }

@@ -20,6 +20,7 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
   const [matches, setMatches] = useState<Show[]>([]);
   const [myLikes, setMyLikes] = useState<Set<string>>(new Set());
   const [partnerLikes, setPartnerLikes] = useState<Set<string>>(new Set());
+  const [notTonightIds, setNotTonightIds] = useState<Set<string>>(new Set());
 
   const shows = sampleShows;
   const currentShow = shows[currentIndex];
@@ -67,15 +68,28 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
   // Load existing votes on mount
   useEffect(() => {
     const loadVotes = async () => {
+      // Load votes for this session
       const { data } = await supabase
         .from("votes")
         .select()
         .eq("session_id", sessionId);
+      
+      // Load all not_tonight votes for this player across all sessions
+      // to flag previously interested shows
+      const { data: allNotTonightData } = await supabase
+        .from("votes")
+        .select("show_id")
+        .eq("player", player)
+        .eq("vote_type", "not_tonight");
+
       if (!data) return;
 
       const myLikedIds = new Set<string>();
       const partnerLikedIds = new Set<string>();
       const matchedShows: Show[] = [];
+      const prevNotTonight = new Set<string>(
+        (allNotTonightData || []).map((v) => v.show_id)
+      );
 
       data.forEach((v) => {
         if (v.player === player && v.liked) myLikedIds.add(v.show_id);
@@ -93,6 +107,7 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
       setMyLikes(myLikedIds);
       setPartnerLikes(partnerLikedIds);
       setMatches(matchedShows);
+      setNotTonightIds(prevNotTonight);
 
       // Skip to where we left off
       const myVotedIds = new Set(data.filter((v) => v.player === player).map((v) => v.show_id));
@@ -107,11 +122,11 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
   }, [sessionId, player, otherPlayer, shows]);
 
   const handleVote = useCallback(
-    async (liked: boolean) => {
+    async (liked: boolean, voteType: "liked" | "skipped" | "not_tonight" = liked ? "liked" : "skipped") => {
       if (!currentShow) return;
 
       try {
-        await submitVote(sessionId, currentShow.id, player, liked);
+        await submitVote(sessionId, currentShow.id, player, liked, voteType);
       } catch {
         // Ignore duplicate vote errors
       }
@@ -221,6 +236,8 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
               show={currentShow}
               onLike={() => handleVote(true)}
               onSkip={() => handleVote(false)}
+              onNotTonight={() => handleVote(false, "not_tonight")}
+              wasNotTonight={notTonightIds.has(currentShow.id)}
             />
           </AnimatePresence>
         )}
