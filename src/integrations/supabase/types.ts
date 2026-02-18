@@ -14,7 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      sessions: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          created_at: string
+          id: string
+          liked: boolean
+          player: number
+          session_id: string
+          show_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          liked: boolean
+          player: number
+          session_id: string
+          show_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          liked?: boolean
+          player?: number
+          session_id?: string
+          show_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
