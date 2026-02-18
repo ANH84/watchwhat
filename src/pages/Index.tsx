@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Heart, Tv, Sparkles, ArrowRight, Users, MessageCircle } from "lucide-react";
 import heroImage from "@/assets/hero-couple.png";
 import SwipePage from "@/components/SwipePage";
 import CreateSession from "@/components/CreateSession";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
+import { saveLocalSession, loadLocalSession, clearLocalSession } from "@/lib/session";
 
 const Index = () => {
   const [sessionInfo, setSessionInfo] = useState<{
@@ -14,17 +15,41 @@ const Index = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [leadCaptured, setLeadCaptured] = useState(false);
 
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    const stored = loadLocalSession();
+    if (stored && stored.player === 1) {
+      setSessionInfo({ id: stored.id, code: stored.code });
+      setLeadCaptured(stored.leadCaptured);
+    }
+  }, []);
+
+  const handleSessionCreated = (id: string, code: string) => {
+    setSessionInfo({ id, code });
+    saveLocalSession({ id, code, player: 1, leadCaptured: false });
+  };
+
+  const handleLeadComplete = () => {
+    setLeadCaptured(true);
+    if (sessionInfo) {
+      saveLocalSession({ id: sessionInfo.id, code: sessionInfo.code, player: 1, leadCaptured: true });
+    }
+  };
+
+  const handleBack = () => {
+    setSessionInfo(null);
+    setShowCreate(false);
+    setLeadCaptured(false);
+    clearLocalSession();
+  };
+
   if (sessionInfo && leadCaptured) {
     return (
       <SwipePage
         sessionId={sessionInfo.id}
         sessionCode={sessionInfo.code}
         player={1}
-        onBack={() => {
-          setSessionInfo(null);
-          setShowCreate(false);
-          setLeadCaptured(false);
-        }}
+        onBack={handleBack}
       />
     );
   }
@@ -42,7 +67,7 @@ const Index = () => {
           </h2>
           <LeadCaptureForm
             sessionId={sessionInfo.id}
-            onComplete={() => setLeadCaptured(true)}
+            onComplete={handleLeadComplete}
           />
         </div>
       </div>
@@ -79,7 +104,7 @@ const Index = () => {
               Create a session and share the link with your partner via WhatsApp
             </p>
             <CreateSession
-              onSessionCreated={(id, code) => setSessionInfo({ id, code })}
+              onSessionCreated={handleSessionCreated}
             />
           </motion.div>
         ) : (
@@ -104,8 +129,8 @@ const Index = () => {
                 </h1>
 
                 <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-md">
-                  Create a session, share the link with your partner, and both swipe on shows.
-                  When you match — it's movie night! 🍿
+                  Create a session, share the link with your partner, and both swipe on shows
+                  whenever you have a moment. When you match — it's movie night! 🍿
                 </p>
 
                 <motion.button
@@ -133,7 +158,7 @@ const Index = () => {
                       <Heart className="w-5 h-5 text-accent" />
                       Match
                     </div>
-                    <div className="text-sm text-muted-foreground">In real-time</div>
+                    <div className="text-sm text-muted-foreground">Swipe anytime</div>
                   </div>
                 </div>
               </motion.div>
@@ -191,7 +216,7 @@ const Index = () => {
                   {
                     icon: "🎉",
                     title: "Swipe & Match",
-                    desc: "Both swipe at the same time. When you both ❤️ a show — it's a match!",
+                    desc: "Both swipe on your own time. When you both ❤️ a show — it's a match!",
                   },
                 ].map((step, i) => (
                   <div

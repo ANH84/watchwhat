@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Users, Wifi } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
 import ShowCard from "@/components/ShowCard";
 import MatchReveal from "@/components/MatchReveal";
 import { sampleShows, Show } from "@/data/shows";
@@ -148,7 +148,6 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
               {player === 1 ? "💜" : "🧡"} Partner {player}
             </span>
             <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
-              <Wifi className="w-3 h-3 text-primary" />
               Session: {sessionCode}
             </div>
           </div>
@@ -201,10 +200,10 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
               <div>
                 <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  Waiting for your partner to finish swiping...
+                  No matches yet — your partner may still be swiping.
                 </p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Matches will appear here in real-time!
+                  Come back later to check for matches!
                 </p>
               </div>
             )}

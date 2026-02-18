@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Tv, Loader2 } from "lucide-react";
-import { joinSession } from "@/lib/session";
+import { joinSession, saveLocalSession, loadLocalSession, clearLocalSession } from "@/lib/session";
 import SwipePage from "@/components/SwipePage";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
 
@@ -15,7 +15,19 @@ const JoinPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [leadCaptured, setLeadCaptured] = useState(false);
 
+  // Restore from localStorage if same session
   useEffect(() => {
+    const stored = loadLocalSession();
+    if (stored && stored.player === 2 && code && stored.code === code.toUpperCase().trim()) {
+      setSession({ id: stored.id, code: stored.code });
+      setLeadCaptured(stored.leadCaptured);
+      if (stored.leadCaptured) {
+        setShowForm(true);
+      }
+      setLoading(false);
+      return;
+    }
+
     const tryJoin = async () => {
       if (!code) {
         setError(true);
@@ -33,13 +45,30 @@ const JoinPage = () => {
     tryJoin();
   }, [code]);
 
+  const handleLeadComplete = () => {
+    setLeadCaptured(true);
+    if (session) {
+      saveLocalSession({ id: session.id, code: session.code, player: 2, leadCaptured: true });
+    }
+  };
+
+  const handleJoinClick = () => {
+    setShowForm(true);
+    if (session) {
+      saveLocalSession({ id: session.id, code: session.code, player: 2, leadCaptured: false });
+    }
+  };
+
   if (leadCaptured && session) {
     return (
       <SwipePage
         sessionId={session.id}
         sessionCode={session.code}
         player={2}
-        onBack={() => navigate("/")}
+        onBack={() => {
+          clearLocalSession();
+          navigate("/");
+        }}
       />
     );
   }
@@ -72,7 +101,7 @@ const JoinPage = () => {
               Go Home
             </button>
           </motion.div>
-        ) : session && showForm ? (
+        ) : session && showForm && !leadCaptured ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -82,7 +111,7 @@ const JoinPage = () => {
             </h2>
             <LeadCaptureForm
               sessionId={session.id}
-              onComplete={() => setLeadCaptured(true)}
+              onComplete={handleLeadComplete}
             />
           </motion.div>
         ) : session ? (
@@ -98,12 +127,12 @@ const JoinPage = () => {
               </div>
             </div>
             <p className="text-muted-foreground text-sm mb-6">
-              Swipe on shows your partner has also been swiping on. When you both ❤️ the same show, it's a match!
+              Swipe on shows at your own pace. When you both ❤️ the same show, it's a match!
             </p>
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setShowForm(true)}
+              onClick={handleJoinClick}
               className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-display font-bold text-lg shadow-lg"
             >
               Join & Start Swiping 🎬

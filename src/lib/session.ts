@@ -64,3 +64,32 @@ export function getWhatsAppShareUrl(code: string): string {
   const message = `🎬 Let's pick a show together! Join my WatchTogether session:\n${url}`;
   return `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
+
+// --- Local session persistence ---
+
+const STORAGE_KEY = "watchtogether_session";
+
+interface StoredSession {
+  id: string;
+  code: string;
+  player: 1 | 2;
+  leadCaptured: boolean;
+}
+
+export function saveLocalSession(session: StoredSession) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+}
+
+export function loadLocalSession(): StoredSession | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as StoredSession;
+  } catch {
+    return null;
+  }
+}
+
+export function clearLocalSession() {
+  localStorage.removeItem(STORAGE_KEY);
+}
