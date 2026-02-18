@@ -1,55 +1,139 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Users } from "lucide-react";
+import { ArrowLeft, Users, Wifi } from "lucide-react";
 import ShowCard from "@/components/ShowCard";
 import MatchReveal from "@/components/MatchReveal";
 import { sampleShows, Show } from "@/data/shows";
+import { submitVote } from "@/lib/session";
+import { supabase } from "@/integrations/supabase/client";
 
-type Player = "partner1" | "partner2";
+interface SwipePageProps {
+  sessionId: string;
+  sessionCode: string;
+  player: 1 | 2;
+  onBack: () => void;
+}
 
-const SwipePage = ({ onBack }: { onBack: () => void }) => {
-  const [currentPlayer, setCurrentPlayer] = useState<Player>("partner1");
-  const [currentIndex, setCurrentIndex] = useState<Record<Player, number>>({
-    partner1: 0,
-    partner2: 0,
-  });
-  const [likes, setLikes] = useState<Record<Player, Set<string>>>({
-    partner1: new Set(),
-    partner2: new Set(),
-  });
+const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [matchedShow, setMatchedShow] = useState<Show | null>(null);
   const [matches, setMatches] = useState<Show[]>([]);
+  const [myLikes, setMyLikes] = useState<Set<string>>(new Set());
+  const [partnerLikes, setPartnerLikes] = useState<Set<string>>(new Set());
 
   const shows = sampleShows;
-  const currentShow = shows[currentIndex[currentPlayer]];
-  const isDone = currentIndex[currentPlayer] >= shows.length;
+  const currentShow = shows[currentIndex];
+  const isDone = currentIndex >= shows.length;
+  const otherPlayer = player === 1 ? 2 : 1;
 
-  const otherPlayer = currentPlayer === "partner1" ? "partner2" : "partner1";
-  const bothDone = currentIndex.partner1 >= shows.length && currentIndex.partner2 >= shows.length;
+  // Subscribe to partner's votes in real-time
+  useEffect(() => {
+    const channel = supabase
+      .channel(`votes-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "votes",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const vote = payload.new as { player: number; show_id: string; liked: boolean };
+          if (vote.player === otherPlayer && vote.liked) {
+            setPartnerLikes((prev) => {
+              const next = new Set(prev);
+              next.add(vote.show_id);
+              // Check if we already liked this
+              if (myLikes.has(vote.show_id)) {
+                const show = shows.find((s) => s.id === vote.show_id);
+                if (show) {
+                  setMatchedShow(show);
+                  setMatches((prev) => [...prev, show]);
+                }
+              }
+              return next;
+            });
+          }
+        }
+      )
+      .subscribe();
 
-  const handleVote = (liked: boolean) => {
-    if (!currentShow) return;
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionId, otherPlayer, myLikes, shows]);
 
-    if (liked) {
-      const newLikes = new Set(likes[currentPlayer]);
-      newLikes.add(currentShow.id);
-      setLikes((prev) => ({ ...prev, [currentPlayer]: newLikes }));
+  // Load existing votes on mount
+  useEffect(() => {
+    const loadVotes = async () => {
+      const { data } = await supabase
+        .from("votes")
+        .select()
+        .eq("session_id", sessionId);
+      if (!data) return;
 
-      // Check for match
-      if (likes[otherPlayer].has(currentShow.id)) {
-        setMatchedShow(currentShow);
-        setMatches((prev) => [...prev, currentShow]);
+      const myLikedIds = new Set<string>();
+      const partnerLikedIds = new Set<string>();
+      const matchedShows: Show[] = [];
+
+      data.forEach((v) => {
+        if (v.player === player && v.liked) myLikedIds.add(v.show_id);
+        if (v.player === otherPlayer && v.liked) partnerLikedIds.add(v.show_id);
+      });
+
+      // Find existing matches
+      myLikedIds.forEach((id) => {
+        if (partnerLikedIds.has(id)) {
+          const show = shows.find((s) => s.id === id);
+          if (show) matchedShows.push(show);
+        }
+      });
+
+      setMyLikes(myLikedIds);
+      setPartnerLikes(partnerLikedIds);
+      setMatches(matchedShows);
+
+      // Skip to where we left off
+      const myVotedIds = new Set(data.filter((v) => v.player === player).map((v) => v.show_id));
+      const nextIndex = shows.findIndex((s) => !myVotedIds.has(s.id));
+      if (nextIndex === -1) {
+        setCurrentIndex(shows.length);
+      } else {
+        setCurrentIndex(nextIndex);
       }
-    }
+    };
+    loadVotes();
+  }, [sessionId, player, otherPlayer, shows]);
 
-    setCurrentIndex((prev) => ({
-      ...prev,
-      [currentPlayer]: prev[currentPlayer] + 1,
-    }));
-  };
+  const handleVote = useCallback(
+    async (liked: boolean) => {
+      if (!currentShow) return;
 
-  const playerLabel = currentPlayer === "partner1" ? "Partner 1" : "Partner 2";
-  const playerEmoji = currentPlayer === "partner1" ? "💜" : "🧡";
+      try {
+        await submitVote(sessionId, currentShow.id, player, liked);
+      } catch {
+        // Ignore duplicate vote errors
+      }
+
+      if (liked) {
+        setMyLikes((prev) => {
+          const next = new Set(prev);
+          next.add(currentShow.id);
+          return next;
+        });
+
+        // Check if partner already liked this
+        if (partnerLikes.has(currentShow.id)) {
+          setMatchedShow(currentShow);
+          setMatches((prev) => [...prev, currentShow]);
+        }
+      }
+
+      setCurrentIndex((prev) => prev + 1);
+    },
+    [currentShow, sessionId, player, partnerLikes]
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,30 +145,28 @@ const SwipePage = ({ onBack }: { onBack: () => void }) => {
           </button>
           <div className="text-center">
             <span className="text-sm font-semibold text-muted-foreground">
-              {playerEmoji} {playerLabel}'s turn
+              {player === 1 ? "💜" : "🧡"} Partner {player}
             </span>
-            <div className="text-xs text-muted-foreground">
-              {currentIndex[currentPlayer]} / {shows.length}
+            <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+              <Wifi className="w-3 h-3 text-primary" />
+              Session: {sessionCode}
             </div>
           </div>
-          <button
-            onClick={() => setCurrentPlayer(otherPlayer)}
-            className="px-3 py-1.5 rounded-lg bg-muted text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-          >
-            Switch
-          </button>
+          <div className="text-xs text-muted-foreground font-medium bg-muted px-2 py-1 rounded-md">
+            {currentIndex}/{shows.length}
+          </div>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-8">
-        {bothDone ? (
+        {isDone ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-12"
           >
             <h2 className="text-3xl font-display font-bold text-gradient mb-4">
-              All Done! 🎬
+              You're done! 🎬
             </h2>
             {matches.length > 0 ? (
               <>
@@ -116,41 +198,27 @@ const SwipePage = ({ onBack }: { onBack: () => void }) => {
                 </div>
               </>
             ) : (
-              <p className="text-muted-foreground">
-                No matches this time. Try again with different shows! 😅
-              </p>
+              <div>
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Waiting for your partner to finish swiping...
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Matches will appear here in real-time!
+                </p>
+              </div>
             )}
             <button
               onClick={onBack}
               className="mt-8 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:shadow-lg transition-shadow"
             >
-              Start Over
-            </button>
-          </motion.div>
-        ) : isDone ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12"
-          >
-            <Users className="w-12 h-12 text-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-display font-bold text-foreground mb-2">
-              {playerLabel} is done!
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Pass the phone to your partner to continue.
-            </p>
-            <button
-              onClick={() => setCurrentPlayer(otherPlayer)}
-              className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:shadow-lg transition-shadow"
-            >
-              Switch to {otherPlayer === "partner1" ? "Partner 1" : "Partner 2"}
+              Back to Home
             </button>
           </motion.div>
         ) : (
           <AnimatePresence mode="wait">
             <ShowCard
-              key={currentShow.id + currentPlayer}
+              key={currentShow.id}
               show={currentShow}
               onLike={() => handleVote(true)}
               onSkip={() => handleVote(false)}
