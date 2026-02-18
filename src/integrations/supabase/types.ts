@@ -78,6 +78,7 @@ export type Database = {
           player: number
           session_id: string
           show_id: string
+          vote_type: string
         }
         Insert: {
           created_at?: string
@@ -86,6 +87,7 @@ export type Database = {
           player: number
           session_id: string
           show_id: string
+          vote_type?: string
         }
         Update: {
           created_at?: string
@@ -94,6 +96,7 @@ export type Database = {
           player?: number
           session_id?: string
           show_id?: string
+          vote_type?: string
         }
         Relationships: [
           {

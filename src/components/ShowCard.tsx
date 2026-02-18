@@ -1,14 +1,16 @@
 import { motion } from "framer-motion";
-import { Heart, X, Star, Tv } from "lucide-react";
+import { Heart, X, Star, Clock } from "lucide-react";
 import { Show } from "@/data/shows";
 
 interface ShowCardProps {
   show: Show;
   onLike: () => void;
   onSkip: () => void;
+  onNotTonight: () => void;
+  wasNotTonight?: boolean;
 }
 
-const ShowCard = ({ show, onLike, onSkip }: ShowCardProps) => {
+const ShowCard = ({ show, onLike, onSkip, onNotTonight, wasNotTonight }: ShowCardProps) => {
   return (
     <motion.div
       className="relative w-full max-w-sm mx-auto"
@@ -29,6 +31,14 @@ const ShowCard = ({ show, onLike, onSkip }: ShowCardProps) => {
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-transparent to-transparent" />
+
+          {/* Previously interested badge */}
+          {wasNotTonight && (
+            <div className="absolute top-3 right-3 bg-secondary/90 px-3 py-1 rounded-full flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-secondary-foreground" />
+              <span className="text-xs font-semibold text-secondary-foreground">Previously interested</span>
+            </div>
+          )}
           
           {/* Info overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-5">
@@ -58,14 +68,25 @@ const ShowCard = ({ show, onLike, onSkip }: ShowCardProps) => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-center gap-6 px-5 pb-6">
+        <div className="flex items-center justify-center gap-4 px-5 pb-6">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={onSkip}
-            className="w-14 h-14 rounded-full bg-muted flex items-center justify-center shadow-md hover:bg-destructive/10 transition-colors"
+            className="w-12 h-12 rounded-full bg-muted flex items-center justify-center shadow-md hover:bg-destructive/10 transition-colors"
+            title="Not interested"
           >
-            <X className="w-6 h-6 text-muted-foreground" />
+            <X className="w-5 h-5 text-muted-foreground" />
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={onNotTonight}
+            className="w-12 h-12 rounded-full bg-secondary/20 border border-secondary/40 flex items-center justify-center shadow-md hover:bg-secondary/30 transition-colors"
+            title="Not tonight"
+          >
+            <Clock className="w-5 h-5 text-secondary-foreground" />
           </motion.button>
           
           <motion.button
@@ -73,6 +94,7 @@ const ShowCard = ({ show, onLike, onSkip }: ShowCardProps) => {
             whileTap={{ scale: 0.9 }}
             onClick={onLike}
             className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+            title="Love it"
           >
             <Heart className="w-7 h-7 text-primary-foreground" />
           </motion.button>
