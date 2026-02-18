@@ -2,7 +2,34 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+
+const COUNTRY_CODES = [
+  { code: "+971", label: "🇦🇪 UAE +971" },
+  { code: "+966", label: "🇸🇦 Saudi Arabia +966" },
+  { code: "+20", label: "🇪🇬 Egypt +20" },
+  { code: "+44", label: "🇬🇧 UK +44" },
+  { code: "+1", label: "🇺🇸 US +1" },
+  { code: "+91", label: "🇮🇳 India +91" },
+  { code: "+973", label: "🇧🇭 Bahrain +973" },
+  { code: "+968", label: "🇴🇲 Oman +968" },
+  { code: "+974", label: "🇶🇦 Qatar +974" },
+  { code: "+965", label: "🇰🇼 Kuwait +965" },
+  { code: "+962", label: "🇯🇴 Jordan +962" },
+  { code: "+961", label: "🇱🇧 Lebanon +961" },
+  { code: "+92", label: "🇵🇰 Pakistan +92" },
+  { code: "+63", label: "🇵🇭 Philippines +63" },
+  { code: "+27", label: "🇿🇦 South Africa +27" },
+  { code: "+49", label: "🇩🇪 Germany +49" },
+  { code: "+33", label: "🇫🇷 France +33" },
+];
 
 interface LeadCaptureFormProps {
   sessionId: string;
@@ -14,6 +41,7 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
     first_name: "",
     last_name: "",
     email: "",
+    country_code: "+971",
     mobile: "",
   });
   const [loading, setLoading] = useState(false);
@@ -45,7 +73,7 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
         email: form.email.trim().toLowerCase(),
-        mobile: form.mobile.trim(),
+        mobile: `${form.country_code}${form.mobile.trim()}`,
       });
       onComplete();
     } catch {
@@ -111,14 +139,31 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
       </div>
 
       <div>
-        <Input
-          type="tel"
-          placeholder="Mobile number"
-          value={form.mobile}
-          onChange={(e) => update("mobile", e.target.value)}
-          maxLength={20}
-          className={errors.mobile ? "border-destructive" : ""}
-        />
+        <div className="flex gap-2">
+          <Select
+            value={form.country_code}
+            onValueChange={(val) => update("country_code", val)}
+          >
+            <SelectTrigger className="w-[130px] shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {COUNTRY_CODES.map((c) => (
+                <SelectItem key={c.code} value={c.code}>
+                  {c.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input
+            type="tel"
+            placeholder="Mobile number"
+            value={form.mobile}
+            onChange={(e) => update("mobile", e.target.value)}
+            maxLength={20}
+            className={errors.mobile ? "border-destructive" : ""}
+          />
+        </div>
         {errors.mobile && (
           <p className="text-xs text-destructive mt-1">{errors.mobile}</p>
         )}
