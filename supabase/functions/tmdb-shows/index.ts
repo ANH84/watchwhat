@@ -56,8 +56,30 @@ Deno.serve(async (req) => {
       genreMap[g.id] = g.name;
     });
 
+    // Fetch watch providers for each show in parallel
+    const providerPromises = tmdbData.results.map(async (item: any) => {
+      try {
+        const provUrl = isV4Token
+          ? `https://api.themoviedb.org/3/tv/${item.id}/watch/providers`
+          : `https://api.themoviedb.org/3/tv/${item.id}/watch/providers?api_key=${apiKey}`;
+        const provRes = await fetch(provUrl, { headers });
+        const provData = await provRes.json();
+        // Try US first, then GB, then AE, then first available
+        const region = provData.results?.US || provData.results?.GB || provData.results?.AE || Object.values(provData.results || {})[0] as any;
+        const flatrate = (region as any)?.flatrate || [];
+        return flatrate.map((p: any) => ({
+          name: p.provider_name,
+          logo: p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : null,
+        }));
+      } catch {
+        return [];
+      }
+    });
+
+    const allProviders = await Promise.all(providerPromises);
+
     // Transform to our Show format
-    const shows = tmdbData.results.map((item: any) => ({
+    const shows = tmdbData.results.map((item: any, i: number) => ({
       id: `tmdb-${item.id}`,
       title: item.name || item.original_name,
       genre: (item.genre_ids || []).map((id: number) => genreMap[id] || 'Unknown').filter(Boolean),
@@ -67,7 +89,8 @@ Deno.serve(async (req) => {
       poster: item.poster_path
         ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
         : '',
-      platform: 'TV',
+      platform: allProviders[i]?.[0]?.name || 'TV',
+      providers: allProviders[i] || [],
     }));
 
     return new Response(

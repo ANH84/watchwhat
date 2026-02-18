@@ -60,11 +60,30 @@ const ShowCard = ({ show, onLike, onSkip, onNotTonight, wasNotTonight }: ShowCar
           </div>
         </div>
 
-        {/* Description */}
-        <div className="p-5">
+        {/* Description & Providers */}
+        <div className="p-5 space-y-3">
           <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
             {show.description}
           </p>
+
+          {show.providers && show.providers.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground">Watch on:</span>
+              {show.providers.slice(0, 4).map((p, i) => (
+                <div key={i} className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md">
+                  {p.logo && (
+                    <img
+                      src={p.logo}
+                      alt={p.name}
+                      className="w-4 h-4 rounded-sm object-contain"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  )}
+                  <span className="text-xs font-medium text-foreground">{p.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Actions */}
