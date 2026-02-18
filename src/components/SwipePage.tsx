@@ -13,10 +13,11 @@ interface SwipePageProps {
   sessionId: string;
   sessionCode: string;
   player: 1 | 2;
+  playerName?: string;
   onBack: () => void;
 }
 
-const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) => {
+const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack }: SwipePageProps) => {
   const [filters, setFilters] = useState<TmdbFilters | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matchedShow, setMatchedShow] = useState<Show | null>(null);
@@ -26,7 +27,7 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
   const [notTonightIds, setNotTonightIds] = useState<Set<string>>(new Set());
 
   const defaultFilters: TmdbFilters = { mediaType: "tv", providers: [8], genres: [] };
-  const { shows, loading: showsLoading, error: showsError } = useTmdbShows(filters || defaultFilters, 3);
+  const { shows, loading: showsLoading, error: showsError } = useTmdbShows(filters || defaultFilters, 1);
   const currentShow = shows[currentIndex];
   const isDone = currentIndex >= shows.length;
   const otherPlayer = player === 1 ? 2 : 1;
@@ -168,7 +169,7 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
             </button>
             <div className="text-center">
               <span className="text-sm font-semibold text-muted-foreground">
-                {player === 1 ? "💜" : "🧡"} Partner {player}
+                {player === 1 ? "💜" : "🧡"} {playerName || `Partner ${player}`}
               </span>
               <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
                 Session: {sessionCode}
@@ -187,12 +188,12 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
-          <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <button onClick={() => setFilters(null)} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <div className="text-center">
             <span className="text-sm font-semibold text-muted-foreground">
-              {player === 1 ? "💜" : "🧡"} Partner {player}
+              {player === 1 ? "💜" : "🧡"} {playerName || `Partner ${player}`}
             </span>
             <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
               Session: {sessionCode}

@@ -33,7 +33,7 @@ const COUNTRY_CODES = [
 
 interface LeadCaptureFormProps {
   sessionId: string;
-  onComplete: () => void;
+  onComplete: (firstName: string) => void;
 }
 
 const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
@@ -96,9 +96,9 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
         mobile: data.mobile,
       });
 
-      onComplete();
+      onComplete(data.first_name);
     } catch {
-      onComplete();
+      onComplete("Friend");
     }
   };
 
@@ -119,9 +119,9 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
         email: form.email.trim().toLowerCase(),
         mobile: `${form.country_code}${form.mobile.trim()}`,
       });
-      onComplete();
+      onComplete(form.first_name.trim());
     } catch {
-      onComplete();
+      onComplete(form.first_name.trim() || "Friend");
     }
   };
 
