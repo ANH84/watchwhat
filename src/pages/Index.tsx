@@ -14,6 +14,7 @@ const Index = () => {
   } | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [leadCaptured, setLeadCaptured] = useState(false);
+  const [playerName, setPlayerName] = useState("");
 
   // Restore session from localStorage on mount
   useEffect(() => {
@@ -21,6 +22,7 @@ const Index = () => {
     if (stored && stored.player === 1) {
       setSessionInfo({ id: stored.id, code: stored.code });
       setLeadCaptured(stored.leadCaptured);
+      setPlayerName(stored.firstName || "");
     }
   }, []);
 
@@ -29,10 +31,11 @@ const Index = () => {
     saveLocalSession({ id, code, player: 1, leadCaptured: false });
   };
 
-  const handleLeadComplete = () => {
+  const handleLeadComplete = (firstName: string) => {
     setLeadCaptured(true);
+    setPlayerName(firstName);
     if (sessionInfo) {
-      saveLocalSession({ id: sessionInfo.id, code: sessionInfo.code, player: 1, leadCaptured: true });
+      saveLocalSession({ id: sessionInfo.id, code: sessionInfo.code, player: 1, leadCaptured: true, firstName });
     }
   };
 
@@ -40,6 +43,7 @@ const Index = () => {
     setSessionInfo(null);
     setShowCreate(false);
     setLeadCaptured(false);
+    setPlayerName("");
     clearLocalSession();
   };
 
@@ -49,6 +53,7 @@ const Index = () => {
         sessionId={sessionInfo.id}
         sessionCode={sessionInfo.code}
         player={1}
+        playerName={playerName}
         onBack={handleBack}
       />
     );

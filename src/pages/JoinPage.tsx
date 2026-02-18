@@ -14,6 +14,7 @@ const JoinPage = () => {
   const [error, setError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [leadCaptured, setLeadCaptured] = useState(false);
+  const [playerName, setPlayerName] = useState("");
 
   // Restore from localStorage if same session
   useEffect(() => {
@@ -21,6 +22,7 @@ const JoinPage = () => {
     if (stored && stored.player === 2 && code && stored.code === code.toUpperCase().trim()) {
       setSession({ id: stored.id, code: stored.code });
       setLeadCaptured(stored.leadCaptured);
+      setPlayerName(stored.firstName || "");
       if (stored.leadCaptured) {
         setShowForm(true);
       }
@@ -45,10 +47,11 @@ const JoinPage = () => {
     tryJoin();
   }, [code]);
 
-  const handleLeadComplete = () => {
+  const handleLeadComplete = (firstName: string) => {
     setLeadCaptured(true);
+    setPlayerName(firstName);
     if (session) {
-      saveLocalSession({ id: session.id, code: session.code, player: 2, leadCaptured: true });
+      saveLocalSession({ id: session.id, code: session.code, player: 2, leadCaptured: true, firstName });
     }
   };
 
@@ -65,6 +68,7 @@ const JoinPage = () => {
         sessionId={session.id}
         sessionCode={session.code}
         player={2}
+        playerName={playerName}
         onBack={() => {
           clearLocalSession();
           navigate("/");
