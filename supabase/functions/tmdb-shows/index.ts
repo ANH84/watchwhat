@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     }
 
     if (genres.length > 0) {
-      discoverParams.with_genres = genres.join(',');
+      discoverParams.with_genres = genres.join('|');
     }
 
     if (exclude_genres.length > 0) {
