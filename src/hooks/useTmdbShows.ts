@@ -6,6 +6,7 @@ export interface TmdbFilters {
   mediaType: "tv" | "movie";
   providers: number[];
   genres: number[];
+  excludeGenres: number[];
 }
 
 export function useTmdbShows(filters: TmdbFilters, pages = 3) {
@@ -27,6 +28,7 @@ export function useTmdbShows(filters: TmdbFilters, pages = 3) {
               media_type: filters.mediaType,
               providers: filters.providers,
               genres: filters.genres,
+              exclude_genres: filters.excludeGenres,
             },
           });
 
@@ -55,7 +57,7 @@ export function useTmdbShows(filters: TmdbFilters, pages = 3) {
     };
 
     fetchShows();
-  }, [pages, filters.mediaType, filters.providers.join(","), filters.genres.join(",")]);
+  }, [pages, filters.mediaType, filters.providers.join(","), filters.genres.join(","), filters.excludeGenres.join(",")]);
 
   return { shows, loading, error };
 }
