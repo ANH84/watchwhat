@@ -4,6 +4,7 @@ import { Heart, Tv, Sparkles, ArrowRight, Users, MessageCircle } from "lucide-re
 import heroImage from "@/assets/hero-couple.png";
 import SwipePage from "@/components/SwipePage";
 import CreateSession from "@/components/CreateSession";
+import LeadCaptureForm from "@/components/LeadCaptureForm";
 
 const Index = () => {
   const [sessionInfo, setSessionInfo] = useState<{
@@ -11,8 +12,9 @@ const Index = () => {
     code: string;
   } | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [leadCaptured, setLeadCaptured] = useState(false);
 
-  if (sessionInfo) {
+  if (sessionInfo && leadCaptured) {
     return (
       <SwipePage
         sessionId={sessionInfo.id}
@@ -21,8 +23,29 @@ const Index = () => {
         onBack={() => {
           setSessionInfo(null);
           setShowCreate(false);
+          setLeadCaptured(false);
         }}
       />
+    );
+  }
+
+  if (sessionInfo && !leadCaptured) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="max-w-sm w-full">
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <Tv className="w-6 h-6 text-primary" />
+            <span className="font-display font-bold text-xl text-foreground">WatchTogether</span>
+          </div>
+          <h2 className="text-2xl font-display font-bold text-foreground mb-2 text-center">
+            Almost there!
+          </h2>
+          <LeadCaptureForm
+            sessionId={sessionInfo.id}
+            onComplete={() => setLeadCaptured(true)}
+          />
+        </div>
+      </div>
     );
   }
 

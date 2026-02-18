@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Tv, Loader2 } from "lucide-react";
 import { joinSession } from "@/lib/session";
 import SwipePage from "@/components/SwipePage";
+import LeadCaptureForm from "@/components/LeadCaptureForm";
 
 const JoinPage = () => {
   const { code } = useParams<{ code: string }>();
@@ -11,7 +12,8 @@ const JoinPage = () => {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<{ id: string; code: string } | null>(null);
   const [error, setError] = useState(false);
-  const [started, setStarted] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [leadCaptured, setLeadCaptured] = useState(false);
 
   useEffect(() => {
     const tryJoin = async () => {
@@ -31,7 +33,7 @@ const JoinPage = () => {
     tryJoin();
   }, [code]);
 
-  if (started && session) {
+  if (leadCaptured && session) {
     return (
       <SwipePage
         sessionId={session.id}
@@ -70,6 +72,19 @@ const JoinPage = () => {
               Go Home
             </button>
           </motion.div>
+        ) : session && showForm ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h2 className="text-2xl font-display font-bold text-foreground mb-2">
+              Almost there!
+            </h2>
+            <LeadCaptureForm
+              sessionId={session.id}
+              onComplete={() => setLeadCaptured(true)}
+            />
+          </motion.div>
         ) : session ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -88,7 +103,7 @@ const JoinPage = () => {
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setStarted(true)}
+              onClick={() => setShowForm(true)}
               className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-display font-bold text-lg shadow-lg"
             >
               Join & Start Swiping 🎬
