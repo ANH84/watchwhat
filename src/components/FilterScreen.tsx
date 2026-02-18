@@ -6,6 +6,7 @@ export interface FilterSelections {
   mediaType: "tv" | "movie";
   providers: number[];
   genres: number[];
+  excludeGenres: number[];
 }
 
 const PLATFORMS = [
@@ -65,8 +66,9 @@ interface FilterScreenProps {
 
 const FilterScreen = ({ onApply }: FilterScreenProps) => {
   const [mediaType, setMediaType] = useState<"tv" | "movie">("tv");
-  const [selectedProviders, setSelectedProviders] = useState<Set<number>>(new Set([8])); // Netflix default
+  const [selectedProviders, setSelectedProviders] = useState<Set<number>>(new Set([8]));
   const [selectedGenres, setSelectedGenres] = useState<Set<number>>(new Set());
+  const [excludedGenres, setExcludedGenres] = useState<Set<number>>(new Set());
 
   const genres = mediaType === "tv" ? GENRES_TV : GENRES_MOVIE;
 
@@ -86,6 +88,27 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
       else next.add(id);
       return next;
     });
+    // Remove from excludes if including
+    setExcludedGenres((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const toggleExcludeGenre = (id: number) => {
+    setExcludedGenres((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    // Remove from includes if excluding
+    setSelectedGenres((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
   };
 
   const handleApply = () => {
@@ -93,6 +116,7 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
       mediaType,
       providers: Array.from(selectedProviders),
       genres: Array.from(selectedGenres),
+      excludeGenres: Array.from(excludedGenres),
     });
   };
 
@@ -185,6 +209,28 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
                 selectedGenres.has(g.id)
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border bg-card text-muted-foreground hover:border-primary/40"
+              }`}
+            >
+              {g.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Exclude Genres */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          Exclude Genres <span className="normal-case text-xs">(optional)</span>
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {genres.map((g) => (
+            <button
+              key={g.id}
+              onClick={() => toggleExcludeGenre(g.id)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                excludedGenres.has(g.id)
+                  ? "border-destructive bg-destructive/10 text-destructive"
+                  : "border-border bg-card text-muted-foreground hover:border-destructive/40"
               }`}
             >
               {g.name}

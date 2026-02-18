@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
       media_type = 'tv',
       providers = [],
       genres = [],
+      exclude_genres = [],
     } = await req.json().catch(() => ({}));
 
     const isV4Token = apiKey.startsWith('eyJ');
@@ -52,6 +53,10 @@ Deno.serve(async (req) => {
 
     if (genres.length > 0) {
       discoverParams.with_genres = genres.join(',');
+    }
+
+    if (exclude_genres.length > 0) {
+      discoverParams.without_genres = exclude_genres.join(',');
     }
 
     const discoverUrl = buildUrl(`/discover/${media_type}`, discoverParams);
