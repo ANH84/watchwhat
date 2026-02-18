@@ -1,3 +1,8 @@
+export interface StreamingProvider {
+  name: string;
+  logo: string | null;
+}
+
 export interface Show {
   id: string;
   title: string;
@@ -7,6 +12,7 @@ export interface Show {
   description: string;
   poster: string;
   platform: string;
+  providers?: StreamingProvider[];
 }
 
 export const sampleShows: Show[] = [
