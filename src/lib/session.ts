@@ -62,7 +62,7 @@ export function getShareUrl(code: string): string {
 
 export function getWhatsAppShareUrl(code: string): string {
   const url = getShareUrl(code);
-  const message = `🎬 Let's pick a show together! Join my WatchTogether session:\n${url}`;
+  const message = `🎬 Let's pick a show together! Join my WatchWhat? session:\n${url}`;
   return `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
 
