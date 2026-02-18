@@ -2,19 +2,32 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Show } from "@/data/shows";
 
-export function useTmdbShows(pages = 3) {
+export interface TmdbFilters {
+  mediaType: "tv" | "movie";
+  providers: number[];
+  genres: number[];
+}
+
+export function useTmdbShows(filters: TmdbFilters, pages = 3) {
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchShows = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const allShows: Show[] = [];
         
         for (let page = 1; page <= pages; page++) {
           const { data, error: fnError } = await supabase.functions.invoke("tmdb-shows", {
-            body: { page, type: "popular" },
+            body: {
+              page,
+              media_type: filters.mediaType,
+              providers: filters.providers,
+              genres: filters.genres,
+            },
           });
 
           if (fnError) {
@@ -42,7 +55,7 @@ export function useTmdbShows(pages = 3) {
     };
 
     fetchShows();
-  }, [pages]);
+  }, [pages, filters.mediaType, filters.providers.join(","), filters.genres.join(",")]);
 
   return { shows, loading, error };
 }

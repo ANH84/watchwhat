@@ -3,10 +3,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Users, Loader2 } from "lucide-react";
 import ShowCard from "@/components/ShowCard";
 import MatchReveal from "@/components/MatchReveal";
+import FilterScreen, { FilterSelections } from "@/components/FilterScreen";
 import { Show } from "@/data/shows";
 import { submitVote } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
-import { useTmdbShows } from "@/hooks/useTmdbShows";
+import { useTmdbShows, TmdbFilters } from "@/hooks/useTmdbShows";
 
 interface SwipePageProps {
   sessionId: string;
@@ -16,6 +17,7 @@ interface SwipePageProps {
 }
 
 const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) => {
+  const [filters, setFilters] = useState<TmdbFilters | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matchedShow, setMatchedShow] = useState<Show | null>(null);
   const [matches, setMatches] = useState<Show[]>([]);
@@ -23,7 +25,8 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
   const [partnerLikes, setPartnerLikes] = useState<Set<string>>(new Set());
   const [notTonightIds, setNotTonightIds] = useState<Set<string>>(new Set());
 
-  const { shows, loading: showsLoading, error: showsError } = useTmdbShows(3);
+  const defaultFilters: TmdbFilters = { mediaType: "tv", providers: [8], genres: [] };
+  const { shows, loading: showsLoading, error: showsError } = useTmdbShows(filters || defaultFilters, 3);
   const currentShow = shows[currentIndex];
   const isDone = currentIndex >= shows.length;
   const otherPlayer = player === 1 ? 2 : 1;
@@ -46,7 +49,6 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
             setPartnerLikes((prev) => {
               const next = new Set(prev);
               next.add(vote.show_id);
-              // Check if we already liked this
               if (myLikes.has(vote.show_id)) {
                 const show = shows.find((s) => s.id === vote.show_id);
                 if (show) {
@@ -68,15 +70,13 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
 
   // Load existing votes on mount
   useEffect(() => {
+    if (!filters) return; // Don't load votes until filters are applied
     const loadVotes = async () => {
-      // Load votes for this session
       const { data } = await supabase
         .from("votes")
         .select()
         .eq("session_id", sessionId);
       
-      // Load all not_tonight votes for this player across all sessions
-      // to flag previously interested shows
       const { data: allNotTonightData } = await supabase
         .from("votes")
         .select("show_id")
@@ -97,7 +97,6 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
         if (v.player === otherPlayer && v.liked) partnerLikedIds.add(v.show_id);
       });
 
-      // Find existing matches
       myLikedIds.forEach((id) => {
         if (partnerLikedIds.has(id)) {
           const show = shows.find((s) => s.id === id);
@@ -110,7 +109,6 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
       setMatches(matchedShows);
       setNotTonightIds(prevNotTonight);
 
-      // Skip to where we left off
       const myVotedIds = new Set(data.filter((v) => v.player === player).map((v) => v.show_id));
       const nextIndex = shows.findIndex((s) => !myVotedIds.has(s.id));
       if (nextIndex === -1) {
@@ -120,7 +118,7 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
       }
     };
     loadVotes();
-  }, [sessionId, player, otherPlayer, shows]);
+  }, [sessionId, player, otherPlayer, shows, filters]);
 
   const handleVote = useCallback(
     async (liked: boolean, voteType: "liked" | "skipped" | "not_tonight" = liked ? "liked" : "skipped") => {
@@ -139,7 +137,6 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
           return next;
         });
 
-        // Check if partner already liked this
         if (partnerLikes.has(currentShow.id)) {
           setMatchedShow(currentShow);
           setMatches((prev) => [...prev, currentShow]);
@@ -150,6 +147,40 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
     },
     [currentShow, sessionId, player, partnerLikes]
   );
+
+  const handleFiltersApplied = (selections: FilterSelections) => {
+    setFilters({
+      mediaType: selections.mediaType,
+      providers: selections.providers,
+      genres: selections.genres,
+    });
+    setCurrentIndex(0);
+  };
+
+  // Show filter screen first
+  if (!filters) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
+          <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
+            <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
+              <ArrowLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <div className="text-center">
+              <span className="text-sm font-semibold text-muted-foreground">
+                {player === 1 ? "💜" : "🧡"} Partner {player}
+              </span>
+              <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                Session: {sessionCode}
+              </div>
+            </div>
+            <div className="w-10" />
+          </div>
+        </div>
+        <FilterScreen onApply={handleFiltersApplied} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
