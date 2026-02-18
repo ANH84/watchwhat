@@ -78,7 +78,7 @@ const JoinPage = () => {
       <div className="max-w-sm w-full text-center">
         <div className="flex items-center justify-center gap-2 mb-8">
           <Tv className="w-6 h-6 text-primary" />
-          <span className="font-display font-bold text-xl text-foreground">WatchTogether</span>
+          <span className="font-display font-bold text-xl text-foreground">WatchWhat?</span>
         </div>
 
         {loading ? (

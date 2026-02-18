@@ -60,7 +60,7 @@ const Index = () => {
         <div className="max-w-sm w-full">
           <div className="flex items-center justify-center gap-2 mb-8">
             <Tv className="w-6 h-6 text-primary" />
-            <span className="font-display font-bold text-xl text-foreground">WatchTogether</span>
+            <span className="font-display font-bold text-xl text-foreground">WatchWhat?</span>
           </div>
           <h2 className="text-2xl font-display font-bold text-foreground mb-2 text-center">
             Almost there!
@@ -80,7 +80,7 @@ const Index = () => {
       <nav className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
         <div className="flex items-center gap-2">
           <Tv className="w-6 h-6 text-primary" />
-          <span className="font-display font-bold text-xl text-foreground">WatchTogether</span>
+          <span className="font-display font-bold text-xl text-foreground">WatchWhat?</span>
         </div>
       </nav>
 
