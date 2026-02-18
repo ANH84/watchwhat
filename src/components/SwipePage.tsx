@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Users } from "lucide-react";
+import { ArrowLeft, Users, Loader2 } from "lucide-react";
 import ShowCard from "@/components/ShowCard";
 import MatchReveal from "@/components/MatchReveal";
-import { sampleShows, Show } from "@/data/shows";
+import { Show } from "@/data/shows";
 import { submitVote } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
+import { useTmdbShows } from "@/hooks/useTmdbShows";
 
 interface SwipePageProps {
   sessionId: string;
@@ -22,7 +23,7 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
   const [partnerLikes, setPartnerLikes] = useState<Set<string>>(new Set());
   const [notTonightIds, setNotTonightIds] = useState<Set<string>>(new Set());
 
-  const shows = sampleShows;
+  const { shows, loading: showsLoading, error: showsError } = useTmdbShows(3);
   const currentShow = shows[currentIndex];
   const isDone = currentIndex >= shows.length;
   const otherPlayer = player === 1 ? 2 : 1;
@@ -173,7 +174,17 @@ const SwipePage = ({ sessionId, sessionCode, player, onBack }: SwipePageProps) =
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-8">
-        {isDone ? (
+        {showsLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Loading shows...</p>
+          </div>
+        ) : showsError ? (
+          <div className="text-center py-20">
+            <p className="text-destructive font-semibold mb-2">Failed to load shows</p>
+            <p className="text-muted-foreground text-sm">{showsError}</p>
+          </div>
+        ) : isDone ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
