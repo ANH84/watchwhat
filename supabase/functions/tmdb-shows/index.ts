@@ -17,22 +17,44 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { page = 1, type = 'popular' } = await req.json().catch(() => ({}));
+    const {
+      page = 1,
+      media_type = 'tv',
+      providers = [],
+      genres = [],
+    } = await req.json().catch(() => ({}));
 
-    // Fetch popular or top-rated TV shows
-    const endpoint = type === 'top_rated' ? 'top_rated' : 'popular';
-    
-    // Support both v3 (api_key param) and v4 (Bearer token) auth
     const isV4Token = apiKey.startsWith('eyJ');
-    const authUrl = isV4Token
-      ? `https://api.themoviedb.org/3/tv/${endpoint}?language=en-US&page=${page}`
-      : `https://api.themoviedb.org/3/tv/${endpoint}?language=en-US&page=${page}&api_key=${apiKey}`;
-    const headers: Record<string, string> = { Accept: 'application/json' };
+    const baseHeaders: Record<string, string> = { Accept: 'application/json' };
     if (isV4Token) {
-      headers.Authorization = `Bearer ${apiKey}`;
+      baseHeaders.Authorization = `Bearer ${apiKey}`;
     }
 
-    const tmdbRes = await fetch(authUrl, { headers });
+    const buildUrl = (path: string, params: Record<string, string> = {}) => {
+      const allParams = new URLSearchParams({ language: 'en-US', ...params });
+      if (!isV4Token) allParams.set('api_key', apiKey);
+      return `https://api.themoviedb.org/3${path}?${allParams.toString()}`;
+    };
+
+    // Use discover endpoint for filtering
+    const discoverParams: Record<string, string> = {
+      page: String(page),
+      sort_by: 'popularity.desc',
+      'vote_count.gte': '50',
+      watch_region: 'US',
+    };
+
+    if (providers.length > 0) {
+      discoverParams.with_watch_providers = providers.join('|');
+      discoverParams.with_watch_monetization_types = 'flatrate';
+    }
+
+    if (genres.length > 0) {
+      discoverParams.with_genres = genres.join(',');
+    }
+
+    const discoverUrl = buildUrl(`/discover/${media_type}`, discoverParams);
+    const tmdbRes = await fetch(discoverUrl, { headers: baseHeaders });
 
     if (!tmdbRes.ok) {
       const errText = await tmdbRes.text();
@@ -46,10 +68,8 @@ Deno.serve(async (req) => {
     const tmdbData = await tmdbRes.json();
 
     // Fetch genre list
-    const genreUrl = isV4Token
-      ? 'https://api.themoviedb.org/3/genre/tv/list?language=en'
-      : `https://api.themoviedb.org/3/genre/tv/list?language=en&api_key=${apiKey}`;
-    const genreRes = await fetch(genreUrl, { headers });
+    const genreUrl = buildUrl(`/genre/${media_type}/list`);
+    const genreRes = await fetch(genreUrl, { headers: baseHeaders });
     const genreData = await genreRes.json();
     const genreMap: Record<number, string> = {};
     (genreData.genres || []).forEach((g: { id: number; name: string }) => {
@@ -59,12 +79,9 @@ Deno.serve(async (req) => {
     // Fetch watch providers for each show in parallel
     const providerPromises = tmdbData.results.map(async (item: any) => {
       try {
-        const provUrl = isV4Token
-          ? `https://api.themoviedb.org/3/tv/${item.id}/watch/providers`
-          : `https://api.themoviedb.org/3/tv/${item.id}/watch/providers?api_key=${apiKey}`;
-        const provRes = await fetch(provUrl, { headers });
+        const provUrl = buildUrl(`/${media_type}/${item.id}/watch/providers`);
+        const provRes = await fetch(provUrl, { headers: baseHeaders });
         const provData = await provRes.json();
-        // Try US first, then GB, then AE, then first available
         const region = provData.results?.US || provData.results?.GB || provData.results?.AE || Object.values(provData.results || {})[0] as any;
         const flatrate = (region as any)?.flatrate || [];
         return flatrate.map((p: any) => ({
@@ -78,12 +95,15 @@ Deno.serve(async (req) => {
 
     const allProviders = await Promise.all(providerPromises);
 
+    const titleKey = media_type === 'movie' ? 'title' : 'name';
+    const dateKey = media_type === 'movie' ? 'release_date' : 'first_air_date';
+
     // Transform to our Show format
     const shows = tmdbData.results.map((item: any, i: number) => ({
       id: `tmdb-${item.id}`,
-      title: item.name || item.original_name,
+      title: item[titleKey] || item.original_name || item.original_title,
       genre: (item.genre_ids || []).map((id: number) => genreMap[id] || 'Unknown').filter(Boolean),
-      year: item.first_air_date ? parseInt(item.first_air_date.substring(0, 4)) : 0,
+      year: item[dateKey] ? parseInt(item[dateKey].substring(0, 4)) : 0,
       rating: Math.round((item.vote_average || 0) * 10) / 10,
       description: item.overview || '',
       poster: item.poster_path
