@@ -37,9 +37,10 @@ Deno.serve(async (req) => {
     };
 
     // Use discover endpoint for filtering
+    const sortKey = media_type === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc';
     const discoverParams: Record<string, string> = {
       page: String(page),
-      sort_by: 'popularity.desc',
+      sort_by: sortKey,
       'vote_count.gte': '50',
       watch_region: 'US',
     };
