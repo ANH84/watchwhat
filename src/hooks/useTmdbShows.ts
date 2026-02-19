@@ -57,7 +57,7 @@ export function useTmdbShows(filters: TmdbFilters, pages = 3) {
     };
 
     fetchShows();
-  }, [pages, filters.mediaType, filters.providers.join(","), filters.genres.join(","), filters.languages.join(",")]);
+  }, [pages, filters.mediaType, filters.providers.join(","), filters.genres.join(","), (filters.languages || []).join(",")]);
 
   return { shows, loading, error };
 }
