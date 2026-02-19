@@ -19,7 +19,7 @@ interface SettingsPageProps {
 const SettingsPage = ({ leadEmail, onBack }: SettingsPageProps) => {
   const [lead, setLead] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [favoriteGenre, setFavoriteGenre] = useState<string>("");
+  const [favoriteGenres, setFavoriteGenres] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -42,7 +42,7 @@ const SettingsPage = ({ leadEmail, onBack }: SettingsPageProps) => {
 
       if (data) {
         setLead(data);
-        setFavoriteGenre(data.favorite_genre || "");
+        setFavoriteGenres(new Set(data.favorite_genre ? data.favorite_genre.split(",") : []));
 
         // Generate referral code if not present
         if (!data.referral_code) {
@@ -68,12 +68,22 @@ const SettingsPage = ({ leadEmail, onBack }: SettingsPageProps) => {
     return code;
   };
 
+  const toggleFavoriteGenre = (g: string) => {
+    setFavoriteGenres((prev) => {
+      const next = new Set(prev);
+      if (next.has(g)) next.delete(g);
+      else next.add(g);
+      return next;
+    });
+  };
+
   const handleSaveGenre = async () => {
     if (!lead) return;
     setSaving(true);
+    const value = Array.from(favoriteGenres).join(",");
     await supabase
       .from("leads")
-      .update({ favorite_genre: favoriteGenre })
+      .update({ favorite_genre: value || null })
       .eq("id", lead.id);
     setSaving(false);
     setSaved(true);
@@ -180,9 +190,9 @@ const SettingsPage = ({ leadEmail, onBack }: SettingsPageProps) => {
             {ALL_GENRES.map((g) => (
               <button
                 key={g}
-                onClick={() => setFavoriteGenre(g)}
+                onClick={() => toggleFavoriteGenre(g)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                  favoriteGenre === g
+                  favoriteGenres.has(g)
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border bg-background text-muted-foreground hover:border-primary/40"
                 }`}
@@ -194,7 +204,7 @@ const SettingsPage = ({ leadEmail, onBack }: SettingsPageProps) => {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={handleSaveGenre}
-            disabled={saving || !favoriteGenre}
+            disabled={saving || favoriteGenres.size === 0}
             className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {saved ? (
