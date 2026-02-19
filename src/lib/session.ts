@@ -76,6 +76,7 @@ interface StoredSession {
   player: 1 | 2;
   leadCaptured: boolean;
   firstName?: string;
+  email?: string;
 }
 
 export function saveLocalSession(session: StoredSession) {
