@@ -38,12 +38,16 @@ interface LeadCaptureFormProps {
 
 const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
   const [isReturning, setIsReturning] = useState(false);
-  const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    country_code: "+971",
-    mobile: "",
+  const [form, setForm] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+      first_name: "",
+      last_name: "",
+      email: "",
+      country_code: "+971",
+      mobile: "",
+      referral_code: urlParams.get("ref")?.toUpperCase() || "",
+    };
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -113,10 +117,7 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
     setLoading(true);
     try {
       const email = form.email.trim().toLowerCase();
-
-      // Check for referral code in URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const refCode = urlParams.get("ref");
+      const refCode = form.referral_code.trim().toUpperCase() || null;
 
       const insertData: any = {
         session_id: sessionId,
@@ -127,7 +128,7 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
       };
 
       if (refCode) {
-        insertData.referred_by = refCode.toUpperCase();
+        insertData.referred_by = refCode;
       }
 
       await supabase.from("leads").insert(insertData);
@@ -313,6 +314,16 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
             {errors.mobile && (
               <p className="text-xs text-destructive mt-1">{errors.mobile}</p>
             )}
+          </div>
+
+          <div>
+            <Input
+              placeholder="Referral code (optional)"
+              value={form.referral_code}
+              onChange={(e) => update("referral_code", e.target.value.toUpperCase())}
+              maxLength={20}
+              className="font-mono tracking-wider"
+            />
           </div>
 
           <motion.button
