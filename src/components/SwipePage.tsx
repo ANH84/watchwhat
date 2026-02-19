@@ -26,7 +26,7 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack }: Swipe
   const [partnerLikes, setPartnerLikes] = useState<Set<string>>(new Set());
   const [notTonightIds, setNotTonightIds] = useState<Set<string>>(new Set());
 
-  const defaultFilters: TmdbFilters = { mediaType: "tv", providers: [8], genres: [], excludeGenres: [] };
+  const defaultFilters: TmdbFilters = { mediaType: "tv", providers: [8], genres: [], languages: [] };
   const { shows, loading: showsLoading, error: showsError } = useTmdbShows(filters || defaultFilters, 1);
   const currentShow = shows[currentIndex];
   const isDone = currentIndex >= shows.length;
@@ -154,7 +154,7 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack }: Swipe
       mediaType: selections.mediaType,
       providers: selections.providers,
       genres: selections.genres,
-      excludeGenres: selections.excludeGenres,
+      languages: selections.languages,
     });
     setCurrentIndex(0);
   };

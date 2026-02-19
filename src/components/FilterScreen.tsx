@@ -6,7 +6,7 @@ export interface FilterSelections {
   mediaType: "tv" | "movie";
   providers: number[];
   genres: number[];
-  excludeGenres: number[];
+  languages: string[];
 }
 
 const PLATFORMS = [
@@ -18,6 +18,11 @@ const PLATFORMS = [
   { id: 15, name: "Hulu", logo: "https://image.tmdb.org/t/p/w92/giwM8XX4V2AQb9vsoN7yti82tKK.jpg" },
   { id: 531, name: "Paramount+", logo: "https://image.tmdb.org/t/p/w92/fi83B1ozBHMmFn84KnEUhodMnGp.jpg" },
   { id: 283, name: "Crunchyroll", logo: "https://image.tmdb.org/t/p/w92/8Gt1iClBlzTeQs8WQm8UrCoIxnQ.jpg" },
+];
+
+const LANGUAGE_FILTERS = [
+  { code: "hi", name: "Bollywood" },
+  { code: "ar", name: "Arabic" },
 ];
 
 const GENRES_TV = [
@@ -68,7 +73,7 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
   const [mediaType, setMediaType] = useState<"tv" | "movie">("tv");
   const [selectedProviders, setSelectedProviders] = useState<Set<number>>(new Set([8]));
   const [selectedGenres, setSelectedGenres] = useState<Set<number>>(new Set());
-  const [excludedGenres, setExcludedGenres] = useState<Set<number>>(new Set());
+  const [selectedLanguages, setSelectedLanguages] = useState<Set<string>>(new Set());
 
   const genres = mediaType === "tv" ? GENRES_TV : GENRES_MOVIE;
 
@@ -88,25 +93,13 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
       else next.add(id);
       return next;
     });
-    // Remove from excludes if including
-    setExcludedGenres((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
   };
 
-  const toggleExcludeGenre = (id: number) => {
-    setExcludedGenres((prev) => {
+  const toggleLanguage = (code: string) => {
+    setSelectedLanguages((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-    // Remove from includes if excluding
-    setSelectedGenres((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
       return next;
     });
   };
@@ -116,7 +109,7 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
       mediaType,
       providers: Array.from(selectedProviders),
       genres: Array.from(selectedGenres),
-      excludeGenres: Array.from(excludedGenres),
+      languages: Array.from(selectedLanguages),
     });
   };
 
@@ -198,7 +191,7 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
       {/* Genres */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          Genres {selectedGenres.size === 0 && <span className="normal-case text-xs">(all if none selected)</span>}
+          Genres {selectedGenres.size === 0 && selectedLanguages.size === 0 && <span className="normal-case text-xs">(all if none selected)</span>}
         </h3>
         <div className="flex flex-wrap gap-2">
           {genres.map((g) => (
@@ -217,23 +210,23 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
         </div>
       </div>
 
-      {/* Exclude Genres */}
+      {/* Language / Regional Filters */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          Exclude Genres <span className="normal-case text-xs">(optional)</span>
+          Regional
         </h3>
         <div className="flex flex-wrap gap-2">
-          {genres.map((g) => (
+          {LANGUAGE_FILTERS.map((l) => (
             <button
-              key={g.id}
-              onClick={() => toggleExcludeGenre(g.id)}
+              key={l.code}
+              onClick={() => toggleLanguage(l.code)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                excludedGenres.has(g.id)
-                  ? "border-destructive bg-destructive/10 text-destructive"
-                  : "border-border bg-card text-muted-foreground hover:border-destructive/40"
+                selectedLanguages.has(l.code)
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/40"
               }`}
             >
-              {g.name}
+              {l.name}
             </button>
           ))}
         </div>
