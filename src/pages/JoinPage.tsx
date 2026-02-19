@@ -47,11 +47,11 @@ const JoinPage = () => {
     tryJoin();
   }, [code]);
 
-  const handleLeadComplete = (firstName: string) => {
+  const handleLeadComplete = (firstName: string, email?: string) => {
     setLeadCaptured(true);
     setPlayerName(firstName);
     if (session) {
-      saveLocalSession({ id: session.id, code: session.code, player: 2, leadCaptured: true, firstName });
+      saveLocalSession({ id: session.id, code: session.code, player: 2, leadCaptured: true, firstName, email });
     }
   };
 

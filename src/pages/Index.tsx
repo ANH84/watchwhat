@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Heart, Tv, Sparkles, ArrowRight, Users, MessageCircle } from "lucide-react";
+import { Heart, Tv, Sparkles, ArrowRight, Users, MessageCircle, User } from "lucide-react";
 import heroImage from "@/assets/hero-couple.png";
 import SwipePage from "@/components/SwipePage";
 import CreateSession from "@/components/CreateSession";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
+import SettingsPage from "@/components/SettingsPage";
 import { saveLocalSession, loadLocalSession, clearLocalSession } from "@/lib/session";
 
 const Index = () => {
@@ -15,6 +16,8 @@ const Index = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [playerName, setPlayerName] = useState("");
+  const [playerEmail, setPlayerEmail] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
 
   // Restore session from localStorage on mount
   useEffect(() => {
@@ -23,6 +26,7 @@ const Index = () => {
       setSessionInfo({ id: stored.id, code: stored.code });
       setLeadCaptured(stored.leadCaptured);
       setPlayerName(stored.firstName || "");
+      setPlayerEmail(stored.email || "");
     }
   }, []);
 
@@ -31,11 +35,12 @@ const Index = () => {
     saveLocalSession({ id, code, player: 1, leadCaptured: false });
   };
 
-  const handleLeadComplete = (firstName: string) => {
+  const handleLeadComplete = (firstName: string, email?: string) => {
     setLeadCaptured(true);
     setPlayerName(firstName);
+    if (email) setPlayerEmail(email);
     if (sessionInfo) {
-      saveLocalSession({ id: sessionInfo.id, code: sessionInfo.code, player: 1, leadCaptured: true, firstName });
+      saveLocalSession({ id: sessionInfo.id, code: sessionInfo.code, player: 1, leadCaptured: true, firstName, email });
     }
   };
 
@@ -44,8 +49,13 @@ const Index = () => {
     setShowCreate(false);
     setLeadCaptured(false);
     setPlayerName("");
+    setPlayerEmail("");
     clearLocalSession();
   };
+
+  if (showSettings && playerEmail) {
+    return <SettingsPage leadEmail={playerEmail} onBack={() => setShowSettings(false)} />;
+  }
 
   if (sessionInfo && leadCaptured) {
     return (
@@ -55,6 +65,7 @@ const Index = () => {
         player={1}
         playerName={playerName}
         onBack={handleBack}
+        onOpenSettings={playerEmail ? () => setShowSettings(true) : undefined}
       />
     );
   }
@@ -87,6 +98,14 @@ const Index = () => {
           <Tv className="w-6 h-6 text-primary" />
           <span className="font-display font-bold text-xl text-foreground">WatchWhat?</span>
         </div>
+        {playerEmail && (
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 rounded-full hover:bg-muted transition-colors"
+          >
+            <User className="w-5 h-5 text-muted-foreground" />
+          </button>
+        )}
       </nav>
 
       <main className="max-w-5xl mx-auto px-6 pt-8 pb-20">

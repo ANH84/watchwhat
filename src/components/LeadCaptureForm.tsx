@@ -33,7 +33,7 @@ const COUNTRY_CODES = [
 
 interface LeadCaptureFormProps {
   sessionId: string;
-  onComplete: (firstName: string) => void;
+  onComplete: (firstName: string, email?: string) => void;
 }
 
 const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
@@ -96,9 +96,9 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
         mobile: data.mobile,
       });
 
-      onComplete(data.first_name);
+      onComplete(data.first_name, data.email);
     } catch {
-      onComplete("Friend");
+      onComplete("Friend", "");
     }
   };
 
@@ -112,16 +112,46 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
     setErrors({});
     setLoading(true);
     try {
-      await supabase.from("leads").insert({
+      const email = form.email.trim().toLowerCase();
+
+      // Check for referral code in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get("ref");
+
+      const insertData: any = {
         session_id: sessionId,
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
-        email: form.email.trim().toLowerCase(),
+        email,
         mobile: `${form.country_code}${form.mobile.trim()}`,
-      });
-      onComplete(form.first_name.trim());
+      };
+
+      if (refCode) {
+        insertData.referred_by = refCode.toUpperCase();
+      }
+
+      await supabase.from("leads").insert(insertData);
+
+      // Increment referral count for the referrer
+      if (refCode) {
+        const { data: referrer } = await supabase
+          .from("leads")
+          .select("id, referral_count")
+          .eq("referral_code", refCode.toUpperCase())
+          .limit(1)
+          .maybeSingle();
+
+        if (referrer) {
+          await supabase
+            .from("leads")
+            .update({ referral_count: (referrer.referral_count || 0) + 1 })
+            .eq("id", referrer.id);
+        }
+      }
+
+      onComplete(form.first_name.trim(), email);
     } catch {
-      onComplete(form.first_name.trim() || "Friend");
+      onComplete(form.first_name.trim() || "Friend", form.email.trim().toLowerCase());
     }
   };
 

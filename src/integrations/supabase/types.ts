@@ -16,30 +16,48 @@ export type Database = {
     Tables: {
       leads: {
         Row: {
+          card_holder_name: string | null
+          card_last_four: string | null
           created_at: string
           email: string
+          favorite_genre: string | null
           first_name: string
           id: string
           last_name: string
           mobile: string
+          referral_code: string | null
+          referral_count: number
+          referred_by: string | null
           session_id: string | null
         }
         Insert: {
+          card_holder_name?: string | null
+          card_last_four?: string | null
           created_at?: string
           email: string
+          favorite_genre?: string | null
           first_name: string
           id?: string
           last_name: string
           mobile: string
+          referral_code?: string | null
+          referral_count?: number
+          referred_by?: string | null
           session_id?: string | null
         }
         Update: {
+          card_holder_name?: string | null
+          card_last_four?: string | null
           created_at?: string
           email?: string
+          favorite_genre?: string | null
           first_name?: string
           id?: string
           last_name?: string
           mobile?: string
+          referral_code?: string | null
+          referral_count?: number
+          referred_by?: string | null
           session_id?: string | null
         }
         Relationships: [

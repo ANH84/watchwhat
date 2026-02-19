@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Users, Loader2 } from "lucide-react";
+import { ArrowLeft, Users, Loader2, User } from "lucide-react";
 import ShowCard from "@/components/ShowCard";
 import MatchReveal from "@/components/MatchReveal";
 import FilterScreen, { FilterSelections } from "@/components/FilterScreen";
@@ -15,9 +15,10 @@ interface SwipePageProps {
   player: 1 | 2;
   playerName?: string;
   onBack: () => void;
+  onOpenSettings?: () => void;
 }
 
-const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack }: SwipePageProps) => {
+const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenSettings }: SwipePageProps) => {
   const [filters, setFilters] = useState<TmdbFilters | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matchedShow, setMatchedShow] = useState<Show | null>(null);
@@ -176,7 +177,13 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack }: Swipe
                 Session: {sessionCode}
               </div>
             </div>
-            <div className="w-10" />
+            {onOpenSettings ? (
+              <button onClick={onOpenSettings} className="p-2 rounded-lg hover:bg-muted transition-colors">
+                <User className="w-5 h-5 text-muted-foreground" />
+              </button>
+            ) : (
+              <div className="w-10" />
+            )}
           </div>
         </div>
         <FilterScreen onApply={handleFiltersApplied} />
