@@ -9,6 +9,12 @@ export interface FilterSelections {
   languages: string[];
 }
 
+// Special language-based "genres" use negative IDs
+const LANGUAGE_GENRE_MAP: Record<number, string> = {
+  [-1]: "hi", // Bollywood → Hindi
+  [-2]: "ar", // Arabic
+};
+
 const PLATFORMS = [
   { id: 8, name: "Netflix", logo: "https://image.tmdb.org/t/p/w92/pbpMk2JmcoNnQwx5JGpXBGjLxOl.jpg" },
   { id: 337, name: "Disney+", logo: "https://image.tmdb.org/t/p/w92/7rwgEs15tFwyR9NPQ5vpzxTj19Q.jpg" },
@@ -20,9 +26,9 @@ const PLATFORMS = [
   { id: 283, name: "Crunchyroll", logo: "https://image.tmdb.org/t/p/w92/8Gt1iClBlzTeQs8WQm8UrCoIxnQ.jpg" },
 ];
 
-const LANGUAGE_FILTERS = [
-  { code: "hi", name: "Bollywood" },
-  { code: "ar", name: "Arabic" },
+const EXTRA_GENRE_OPTIONS = [
+  { id: -1, name: "Bollywood" },
+  { id: -2, name: "Arabic" },
 ];
 
 const GENRES_TV = [
@@ -73,9 +79,9 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
   const [mediaType, setMediaType] = useState<"tv" | "movie">("tv");
   const [selectedProviders, setSelectedProviders] = useState<Set<number>>(new Set([8]));
   const [selectedGenres, setSelectedGenres] = useState<Set<number>>(new Set());
-  const [selectedLanguages, setSelectedLanguages] = useState<Set<string>>(new Set());
 
   const genres = mediaType === "tv" ? GENRES_TV : GENRES_MOVIE;
+  const allGenres = [...genres, ...EXTRA_GENRE_OPTIONS];
 
   const toggleProvider = (id: number) => {
     setSelectedProviders((prev) => {
@@ -95,21 +101,19 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
     });
   };
 
-  const toggleLanguage = (code: string) => {
-    setSelectedLanguages((prev) => {
-      const next = new Set(prev);
-      if (next.has(code)) next.delete(code);
-      else next.add(code);
-      return next;
-    });
-  };
-
   const handleApply = () => {
+    // Separate real genre IDs from language-based pseudo-genre IDs
+    const realGenres = Array.from(selectedGenres).filter((id) => id > 0);
+    const languages = Array.from(selectedGenres)
+      .filter((id) => id < 0)
+      .map((id) => LANGUAGE_GENRE_MAP[id])
+      .filter(Boolean);
+
     onApply({
       mediaType,
       providers: Array.from(selectedProviders),
-      genres: Array.from(selectedGenres),
-      languages: Array.from(selectedLanguages),
+      genres: realGenres,
+      languages,
     });
   };
 
@@ -191,10 +195,10 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
       {/* Genres */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          Genres {selectedGenres.size === 0 && selectedLanguages.size === 0 && <span className="normal-case text-xs">(all if none selected)</span>}
+          Genres {selectedGenres.size === 0 && <span className="normal-case text-xs">(all if none selected)</span>}
         </h3>
         <div className="flex flex-wrap gap-2">
-          {genres.map((g) => (
+          {allGenres.map((g) => (
             <button
               key={g.id}
               onClick={() => toggleGenre(g.id)}
@@ -205,28 +209,6 @@ const FilterScreen = ({ onApply }: FilterScreenProps) => {
               }`}
             >
               {g.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Language / Regional Filters */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          Regional
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {LANGUAGE_FILTERS.map((l) => (
-            <button
-              key={l.code}
-              onClick={() => toggleLanguage(l.code)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                selectedLanguages.has(l.code)
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-card text-muted-foreground hover:border-primary/40"
-              }`}
-            >
-              {l.name}
             </button>
           ))}
         </div>
