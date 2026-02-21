@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Users, Loader2, User, Heart, Clock } from "lucide-react";
+import { ArrowLeft, Users, Loader2, User, Heart, Clock, Tv } from "lucide-react";
 import ShowCard from "@/components/ShowCard";
 import MatchReveal from "@/components/MatchReveal";
 import FilterScreen, { FilterSelections } from "@/components/FilterScreen";
@@ -8,6 +8,7 @@ import { Show } from "@/data/shows";
 import { submitVote } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
 import { useTmdbShows, TmdbFilters } from "@/hooks/useTmdbShows";
+import { getTitlesPreference } from "@/components/SettingsPage";
 
 interface SwipePageProps {
   sessionId: string;
@@ -29,7 +30,8 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
   const [notTonightIds, setNotTonightIds] = useState<Set<string>>(new Set());
 
   const defaultFilters: TmdbFilters = { mediaType: "tv", providers: [8], genres: [], languages: [] };
-  const { shows, loading: showsLoading, error: showsError } = useTmdbShows(filters || defaultFilters, 1);
+  const { shows: rawShows, loading: showsLoading, error: showsError } = useTmdbShows(filters || defaultFilters, 1);
+  const shows = useMemo(() => rawShows.slice(0, getTitlesPreference()), [rawShows]);
   const currentShow = shows[currentIndex];
   const isDone = currentIndex >= shows.length;
   const otherPlayer = player === 1 ? 2 : 1;
@@ -167,8 +169,9 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
           <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
-            <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
-              <ArrowLeft className="w-5 h-5 text-foreground" />
+            <button onClick={onBack} className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-muted transition-colors">
+              <Tv className="w-5 h-5 text-primary" />
+              <span className="font-display font-bold text-sm text-foreground">WatchWhat?</span>
             </button>
             <div className="text-center">
               <span className="text-sm font-semibold text-muted-foreground">
@@ -197,8 +200,9 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
-          <button onClick={() => setFilters(null)} className="p-2 rounded-lg hover:bg-muted transition-colors">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
+          <button onClick={() => setFilters(null)} className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-muted transition-colors">
+            <Tv className="w-5 h-5 text-primary" />
+            <span className="font-display font-bold text-sm text-foreground">WatchWhat?</span>
           </button>
           <div className="text-center">
             <span className="text-sm font-semibold text-muted-foreground">
