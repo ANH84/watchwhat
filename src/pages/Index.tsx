@@ -283,7 +283,7 @@ const Index = () => {
                 onClick={handleLogout}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-4"
               >
-                Switch account
+                Logout
               </button>
             </div>
           </motion.div>
