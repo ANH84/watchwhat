@@ -58,6 +58,9 @@ const Index = () => {
   const handleLeadComplete = async (firstName: string, email?: string, leadId?: string, isReturning?: boolean) => {
     setLeadCaptured(true);
     setShowLeadCapture(false);
+    setShowSettings(false);
+    setShowWatchlist(false);
+    setGameMode(null);
     setPlayerName(firstName);
     setIsNewUser(!isReturning);
     if (email) setPlayerEmail(email);
@@ -121,104 +124,8 @@ const Index = () => {
 
   // --- Subscreen renders ---
 
-  if (showWatchlist && playerEmail) {
-    return <WatchlistPage leadEmail={playerEmail} onBack={() => setShowWatchlist(false)} />;
-  }
-
-  if (showSettings && playerEmail) {
-    return (
-      <SettingsPage
-        leadEmail={playerEmail}
-        onBack={() => setShowSettings(false)}
-        onOpenWatchlist={() => { setShowSettings(false); setShowWatchlist(true); }}
-        onLogout={handleLogout}
-        onHome={() => { setShowSettings(false); setGameMode(null); }}
-      />
-    );
-  }
-
-  // Active game
-  if (sessionInfo && sessionInfo.id && leadCaptured && gameMode) {
-    return (
-      <SwipePage
-        sessionId={sessionInfo.id}
-        sessionCode={sessionInfo.code}
-        player={1}
-        playerName={playerName}
-        onBack={handleBack}
-        onOpenSettings={playerEmail ? () => setShowSettings(true) : undefined}
-        mode={gameMode}
-      />
-    );
-  }
-
-  // Multi: create session screen
-  if (gameMode === "multi" && showCreate && leadCaptured) {
-    return (
-      <div className="min-h-screen bg-background overflow-hidden">
-        <nav className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
-          <div className="flex items-center gap-2">
-            <Tv className="w-6 h-6 text-primary" />
-            <span className="font-display font-bold text-xl text-foreground">WatchWhat?</span>
-          </div>
-        </nav>
-        <main className="max-w-5xl mx-auto px-6 pt-8 pb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="py-12"
-          >
-            <button
-              onClick={handleBack}
-              className="text-muted-foreground text-sm mb-6 hover:text-foreground transition-colors"
-            >
-              ← Back
-            </button>
-            <h2 className="text-3xl font-display font-bold text-foreground mb-2 text-center">
-              Start a session
-            </h2>
-            <p className="text-muted-foreground text-center mb-8">
-              Create a session and share the link with your partner via WhatsApp
-            </p>
-            <CreateSession onSessionCreated={handleSessionCreated} />
-          </motion.div>
-        </main>
-      </div>
-    );
-  }
-
-  // Lead capture screen (before mode selection)
-  if (showLeadCapture && !leadCaptured) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="max-w-sm w-full">
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <Tv className="w-6 h-6 text-primary" />
-            <span className="font-display font-bold text-xl text-foreground">WatchWhat?</span>
-          </div>
-          <h2 className="text-2xl font-display font-bold text-foreground mb-2 text-center">
-            Let's get started 🎬
-          </h2>
-          <p className="text-muted-foreground text-center text-sm mb-6">
-            Sign up or log back in to start swiping
-          </p>
-          <LeadCaptureForm
-            sessionId="solo-pending"
-            onComplete={handleLeadComplete}
-          />
-          <button
-            onClick={() => setShowLeadCapture(false)}
-            className="w-full text-center text-muted-foreground text-sm mt-4 hover:text-foreground transition-colors"
-          >
-            ← Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Logged-in mode selection screen
-  if (leadCaptured && !gameMode) {
+  // Mode selection takes priority — never skip this for users without an active game
+  if (leadCaptured && !gameMode && !showCreate) {
     return (
       <div className="min-h-screen bg-background overflow-hidden">
         <nav className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
@@ -325,6 +232,104 @@ const Index = () => {
       </div>
     );
   }
+
+  if (showWatchlist && playerEmail) {
+    return <WatchlistPage leadEmail={playerEmail} onBack={() => setShowWatchlist(false)} />;
+  }
+
+  if (showSettings && playerEmail) {
+    return (
+      <SettingsPage
+        leadEmail={playerEmail}
+        onBack={() => setShowSettings(false)}
+        onOpenWatchlist={() => { setShowSettings(false); setShowWatchlist(true); }}
+        onLogout={handleLogout}
+        onHome={() => { setShowSettings(false); setGameMode(null); }}
+      />
+    );
+  }
+
+  // Active game
+  if (sessionInfo && sessionInfo.id && leadCaptured && gameMode) {
+    return (
+      <SwipePage
+        sessionId={sessionInfo.id}
+        sessionCode={sessionInfo.code}
+        player={1}
+        playerName={playerName}
+        onBack={handleBack}
+        onOpenSettings={playerEmail ? () => setShowSettings(true) : undefined}
+        mode={gameMode}
+      />
+    );
+  }
+
+  // Multi: create session screen
+  if (gameMode === "multi" && showCreate && leadCaptured) {
+    return (
+      <div className="min-h-screen bg-background overflow-hidden">
+        <nav className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
+          <div className="flex items-center gap-2">
+            <Tv className="w-6 h-6 text-primary" />
+            <span className="font-display font-bold text-xl text-foreground">WatchWhat?</span>
+          </div>
+        </nav>
+        <main className="max-w-5xl mx-auto px-6 pt-8 pb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="py-12"
+          >
+            <button
+              onClick={handleBack}
+              className="text-muted-foreground text-sm mb-6 hover:text-foreground transition-colors"
+            >
+              ← Back
+            </button>
+            <h2 className="text-3xl font-display font-bold text-foreground mb-2 text-center">
+              Start a session
+            </h2>
+            <p className="text-muted-foreground text-center mb-8">
+              Create a session and share the link with your partner via WhatsApp
+            </p>
+            <CreateSession onSessionCreated={handleSessionCreated} />
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
+
+  // Lead capture screen (before mode selection)
+  if (showLeadCapture && !leadCaptured) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="max-w-sm w-full">
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <Tv className="w-6 h-6 text-primary" />
+            <span className="font-display font-bold text-xl text-foreground">WatchWhat?</span>
+          </div>
+          <h2 className="text-2xl font-display font-bold text-foreground mb-2 text-center">
+            Let's get started 🎬
+          </h2>
+          <p className="text-muted-foreground text-center text-sm mb-6">
+            Sign up or log back in to start swiping
+          </p>
+          <LeadCaptureForm
+            sessionId="solo-pending"
+            onComplete={handleLeadComplete}
+          />
+          <button
+            onClick={() => setShowLeadCapture(false)}
+            className="w-full text-center text-muted-foreground text-sm mt-4 hover:text-foreground transition-colors"
+          >
+            ← Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+
 
   // Landing page (not logged in)
   return (
