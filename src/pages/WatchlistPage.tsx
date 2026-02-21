@@ -81,11 +81,14 @@ const WatchlistPage = ({ leadEmail, onBack }: WatchlistPageProps) => {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
+          <button onClick={onBack} className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-muted transition-colors">
+            <Tv className="w-5 h-5 text-primary" />
+            <span className="font-display font-bold text-sm text-foreground">WatchWhat?</span>
+          </button>
+          <h1 className="font-display font-bold text-lg text-foreground">My Watchlist</h1>
           <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="font-display font-bold text-lg text-foreground">My Watchlist</h1>
-          <div className="w-9" />
         </div>
       </div>
 

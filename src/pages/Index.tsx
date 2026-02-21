@@ -119,6 +119,8 @@ const Index = () => {
         leadEmail={playerEmail}
         onBack={() => setShowSettings(false)}
         onOpenWatchlist={() => { setShowSettings(false); setShowWatchlist(true); }}
+        onLogout={handleLogout}
+        onHome={() => { setShowSettings(false); setGameMode(null); }}
       />
     );
   }

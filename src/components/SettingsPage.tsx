@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Tv } from "lucide-react";
 import { ArrowLeft, Heart, CreditCard, Share2, Copy, Check, X, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,16 +12,29 @@ const ALL_GENRES = [
   "Science Fiction", "Thriller", "War", "Western",
 ];
 
+const TITLES_STORAGE_KEY = "watchwhat_titles_count";
+
+export function getTitlesPreference(): number {
+  try {
+    const val = localStorage.getItem(TITLES_STORAGE_KEY);
+    if (val && [5, 10, 20].includes(Number(val))) return Number(val);
+  } catch {}
+  return 10;
+}
+
 interface SettingsPageProps {
   leadEmail: string;
   onBack: () => void;
   onOpenWatchlist?: () => void;
+  onLogout?: () => void;
+  onHome?: () => void;
 }
 
-const SettingsPage = ({ leadEmail, onBack, onOpenWatchlist }: SettingsPageProps) => {
+const SettingsPage = ({ leadEmail, onBack, onOpenWatchlist, onLogout, onHome }: SettingsPageProps) => {
   const [lead, setLead] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [favoriteGenres, setFavoriteGenres] = useState<Set<string>>(new Set());
+  const [titlesCount, setTitlesCount] = useState(getTitlesPreference());
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -140,11 +154,14 @@ const SettingsPage = ({ leadEmail, onBack, onOpenWatchlist }: SettingsPageProps)
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
+          <button onClick={onHome || onBack} className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-muted transition-colors">
+            <Tv className="w-5 h-5 text-primary" />
+            <span className="font-display font-bold text-sm text-foreground">WatchWhat?</span>
+          </button>
+          <h1 className="font-display font-bold text-lg text-foreground">Settings</h1>
           <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="font-display font-bold text-lg text-foreground">Settings</h1>
-          <div className="w-9" />
         </div>
       </div>
 
@@ -401,6 +418,55 @@ const SettingsPage = ({ leadEmail, onBack, onOpenWatchlist }: SettingsPageProps)
             </>
           )}
         </motion.section>
+
+        {/* Titles per Session */}
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="bg-card rounded-2xl border border-border p-5 space-y-4"
+        >
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Titles per Session
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Choose how many titles you'd like to swipe through each session.
+          </p>
+          <div className="flex gap-3">
+            {[5, 10, 20].map((n) => (
+              <button
+                key={n}
+                onClick={() => {
+                  setTitlesCount(n);
+                  localStorage.setItem(TITLES_STORAGE_KEY, String(n));
+                }}
+                className={`flex-1 py-3 rounded-xl text-sm font-bold border-2 transition-all ${
+                  titlesCount === n
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-background text-muted-foreground hover:border-primary/40"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Logout */}
+        {onLogout && (
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <button
+              onClick={onLogout}
+              className="w-full py-3 rounded-xl border border-destructive/30 text-destructive font-semibold text-sm hover:bg-destructive/10 transition-colors"
+            >
+              Log Out
+            </button>
+          </motion.section>
+        )}
       </div>
     </div>
   );
