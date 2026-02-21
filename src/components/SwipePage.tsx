@@ -18,10 +18,11 @@ interface SwipePageProps {
   onBack: () => void;
   onOpenSettings?: () => void;
   mode?: "solo" | "multi";
+  initialFilters?: TmdbFilters | null;
 }
 
-const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenSettings, mode = "multi" }: SwipePageProps) => {
-  const [filters, setFilters] = useState<TmdbFilters | null>(null);
+const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenSettings, mode = "multi", initialFilters }: SwipePageProps) => {
+  const [filters, setFilters] = useState<TmdbFilters | null>(initialFilters || null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matchedShow, setMatchedShow] = useState<Show | null>(null);
   const [matches, setMatches] = useState<Show[]>([]);
