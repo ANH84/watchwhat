@@ -231,7 +231,13 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
               <Tv className="w-5 h-5 text-primary" />
               <span className="font-display font-bold text-sm text-foreground">WatchWhat?</span>
             </div>
-            <div className="w-10" />
+            {onOpenSettings ? (
+              <button onClick={onOpenSettings} className="p-2 rounded-lg hover:bg-muted transition-colors">
+                <User className="w-5 h-5 text-muted-foreground" />
+              </button>
+            ) : (
+              <div className="w-10" />
+            )}
           </div>
         </div>
         <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 56px)' }}>

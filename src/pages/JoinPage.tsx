@@ -5,6 +5,7 @@ import { Tv, Loader2 } from "lucide-react";
 import { joinSession, saveLocalSession, loadLocalSession, clearLocalSession } from "@/lib/session";
 import SwipePage from "@/components/SwipePage";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
+import SettingsPage from "@/components/SettingsPage";
 
 const JoinPage = () => {
   const { code } = useParams<{ code: string }>();
@@ -15,6 +16,8 @@ const JoinPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [playerName, setPlayerName] = useState("");
+  const [playerEmail, setPlayerEmail] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
 
   // Restore from localStorage if same session
   useEffect(() => {
@@ -23,6 +26,7 @@ const JoinPage = () => {
       setSession({ id: stored.id, code: stored.code });
       setLeadCaptured(stored.leadCaptured);
       setPlayerName(stored.firstName || "");
+      setPlayerEmail(stored.email || "");
       if (stored.leadCaptured) {
         setShowForm(true);
       }
@@ -50,6 +54,7 @@ const JoinPage = () => {
   const handleLeadComplete = (firstName: string, email?: string) => {
     setLeadCaptured(true);
     setPlayerName(firstName);
+    if (email) setPlayerEmail(email);
     if (session) {
       saveLocalSession({ id: session.id, code: session.code, player: 2, leadCaptured: true, firstName, email });
     }
@@ -62,6 +67,20 @@ const JoinPage = () => {
     }
   };
 
+  if (showSettings && playerEmail) {
+    return (
+      <SettingsPage
+        leadEmail={playerEmail}
+        onBack={() => setShowSettings(false)}
+        onLogout={() => {
+          clearLocalSession();
+          navigate("/");
+        }}
+        onHome={() => setShowSettings(false)}
+      />
+    );
+  }
+
   if (leadCaptured && session) {
     return (
       <SwipePage
@@ -73,6 +92,7 @@ const JoinPage = () => {
           clearLocalSession();
           navigate("/");
         }}
+        onOpenSettings={playerEmail ? () => setShowSettings(true) : undefined}
       />
     );
   }
