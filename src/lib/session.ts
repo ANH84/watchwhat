@@ -9,11 +9,13 @@ function generateCode(): string {
   return code;
 }
 
-export async function createSession(): Promise<{ id: string; code: string }> {
+export async function createSession(mode: "solo" | "multi" = "multi", leadId?: string): Promise<{ id: string; code: string }> {
   const code = generateCode();
+  const insertData: any = { code, mode };
+  if (leadId) insertData.lead_id = leadId;
   const { data, error } = await supabase
     .from("sessions")
-    .insert({ code })
+    .insert(insertData)
     .select()
     .single();
 
@@ -77,6 +79,8 @@ interface StoredSession {
   leadCaptured: boolean;
   firstName?: string;
   email?: string;
+  mode?: "solo" | "multi";
+  leadId?: string;
 }
 
 export function saveLocalSession(session: StoredSession) {

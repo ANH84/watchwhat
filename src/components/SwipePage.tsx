@@ -16,9 +16,10 @@ interface SwipePageProps {
   playerName?: string;
   onBack: () => void;
   onOpenSettings?: () => void;
+  mode?: "solo" | "multi";
 }
 
-const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenSettings }: SwipePageProps) => {
+const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenSettings, mode = "multi" }: SwipePageProps) => {
   const [filters, setFilters] = useState<TmdbFilters | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matchedShow, setMatchedShow] = useState<Show | null>(null);

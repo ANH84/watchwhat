@@ -75,18 +75,32 @@ export type Database = {
           code: string
           created_at: string
           id: string
+          lead_id: string | null
+          mode: string
         }
         Insert: {
           code: string
           created_at?: string
           id?: string
+          lead_id?: string | null
+          mode?: string
         }
         Update: {
           code?: string
           created_at?: string
           id?: string
+          lead_id?: string | null
+          mode?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sessions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       votes: {
         Row: {

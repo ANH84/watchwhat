@@ -17,13 +17,17 @@ Deno.serve(async (req) => {
       );
     }
 
+    const body = await req.json().catch(() => ({}));
     const {
+      action,
       page = 1,
       media_type = 'tv',
       providers = [],
       genres = [],
       languages = [],
-    } = await req.json().catch(() => ({}));
+      mediaType,
+      tmdbId,
+    } = body;
 
     const isV4Token = apiKey.startsWith('eyJ');
     const baseHeaders: Record<string, string> = { Accept: 'application/json' };
@@ -36,6 +40,23 @@ Deno.serve(async (req) => {
       if (!isV4Token) allParams.set('api_key', apiKey);
       return `https://api.themoviedb.org/3${path}?${allParams.toString()}`;
     };
+
+    // Handle details action for watchlist
+    if (action === 'details' && mediaType && tmdbId) {
+      const detailUrl = buildUrl(`/${mediaType}/${tmdbId}`);
+      const detailRes = await fetch(detailUrl, { headers: baseHeaders });
+      if (!detailRes.ok) {
+        return new Response(
+          JSON.stringify({ error: 'Failed to fetch details' }),
+          { status: detailRes.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const detailData = await detailRes.json();
+      return new Response(
+        JSON.stringify(detailData),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Use discover endpoint for filtering
     const sortKey = media_type === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc';
@@ -106,7 +127,7 @@ Deno.serve(async (req) => {
 
     // Transform to our Show format
     const shows = tmdbData.results.map((item: any, i: number) => ({
-      id: `tmdb-${item.id}`,
+      id: `${media_type}-${item.id}`,
       title: item[titleKey] || item.original_name || item.original_title,
       genre: (item.genre_ids || []).map((id: number) => genreMap[id] || 'Unknown').filter(Boolean),
       year: item[dateKey] ? parseInt(item[dateKey].substring(0, 4)) : 0,
