@@ -138,9 +138,9 @@ const Index = () => {
               <button
                 onClick={() => setShowSettings(true)}
                 className="p-2 rounded-full hover:bg-muted transition-colors"
-                title="Settings"
+                title="Profile"
               >
-                <Settings className="w-5 h-5 text-muted-foreground" />
+                <User className="w-5 h-5 text-muted-foreground" />
               </button>
             )}
           </div>
@@ -273,6 +273,15 @@ const Index = () => {
             <Tv className="w-6 h-6 text-primary" />
             <span className="font-display font-bold text-xl text-foreground">WatchWhat?</span>
           </div>
+          {playerEmail && (
+            <button
+              onClick={() => setShowSettings(true)}
+              className="p-2 rounded-full hover:bg-muted transition-colors"
+              title="Profile"
+            >
+              <User className="w-5 h-5 text-muted-foreground" />
+            </button>
+          )}
         </nav>
         <main className="max-w-5xl mx-auto px-6 pt-8 pb-20">
           <motion.div
