@@ -223,10 +223,21 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
   // Player 2 waiting for filters to load from session
   if (!filters && player === 2) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading session...</p>
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
+          <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-1.5 p-1">
+              <Tv className="w-5 h-5 text-primary" />
+              <span className="font-display font-bold text-sm text-foreground">WatchWhat?</span>
+            </div>
+            <div className="w-10" />
+          </div>
+        </div>
+        <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 56px)' }}>
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading session...</p>
+          </div>
         </div>
       </div>
     );
@@ -249,8 +260,15 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
               Session: {sessionCode}
             </div>
           </div>
-          <div className="text-xs text-muted-foreground font-medium bg-muted px-2 py-1 rounded-md">
-            {currentIndex}/{shows.length}
+          <div className="flex items-center gap-2">
+            <div className="text-xs text-muted-foreground font-medium bg-muted px-2 py-1 rounded-md">
+              {currentIndex}/{shows.length}
+            </div>
+            {onOpenSettings && (
+              <button onClick={onOpenSettings} className="p-2 rounded-lg hover:bg-muted transition-colors">
+                <User className="w-5 h-5 text-muted-foreground" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -404,7 +422,7 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
               onClick={onBack}
               className="mt-8 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:shadow-lg transition-shadow"
             >
-              Back to Home
+              Play Again 🎬
             </button>
           </motion.div>
         ) : (
