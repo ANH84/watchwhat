@@ -5,9 +5,12 @@ import heroImage from "@/assets/hero-couple.png";
 import SwipePage from "@/components/SwipePage";
 import CreateSession from "@/components/CreateSession";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
+import FilterScreen, { FilterSelections } from "@/components/FilterScreen";
 import SettingsPage from "@/components/SettingsPage";
 import WatchlistPage from "@/pages/WatchlistPage";
 import { createSession as createSessionApi, saveLocalSession, loadLocalSession, clearLocalSession } from "@/lib/session";
+import { supabase } from "@/integrations/supabase/client";
+import { TmdbFilters } from "@/hooks/useTmdbShows";
 
 type GameMode = "solo" | "multi" | null;
 
@@ -26,6 +29,8 @@ const Index = () => {
   const [showWatchlist, setShowWatchlist] = useState(false);
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [showMultiFilters, setShowMultiFilters] = useState(false);
+  const [pendingFilters, setPendingFilters] = useState<TmdbFilters | null>(null);
 
   // Restore session from localStorage on mount
   useEffect(() => {
@@ -50,7 +55,13 @@ const Index = () => {
     }
   }, []);
 
-  const handleSessionCreated = (id: string, code: string) => {
+  const handleSessionCreated = async (id: string, code: string) => {
+    // For multi mode, save filters to session in DB
+    if (pendingFilters) {
+      await (supabase.from("sessions") as any)
+        .update({ filters: pendingFilters })
+        .eq("id", id);
+    }
     setSessionInfo({ id, code });
     saveLocalSession({ id, code, player: 1, leadCaptured: true, firstName: playerName, email: playerEmail, mode: "multi", leadId: playerLeadId });
   };
@@ -100,12 +111,26 @@ const Index = () => {
 
   const handleStartMulti = () => {
     setGameMode("multi");
+    setShowMultiFilters(true);
+  };
+
+  const handleMultiFiltersApplied = (selections: FilterSelections) => {
+    const filters: TmdbFilters = {
+      mediaType: selections.mediaType,
+      providers: selections.providers,
+      genres: selections.genres,
+      languages: selections.languages,
+    };
+    setPendingFilters(filters);
+    setShowMultiFilters(false);
     setShowCreate(true);
   };
 
   const handleBack = () => {
     setSessionInfo(null);
     setShowCreate(false);
+    setShowMultiFilters(false);
+    setPendingFilters(null);
     setGameMode(null);
     // Don't clear lead info — user stays "logged in"
   };
@@ -260,7 +285,32 @@ const Index = () => {
         onBack={handleBack}
         onOpenSettings={playerEmail ? () => setShowSettings(true) : undefined}
         mode={gameMode}
+        initialFilters={gameMode === "multi" ? pendingFilters : undefined}
       />
+    );
+  }
+
+  // Multi: filter screen (before session creation)
+  if (gameMode === "multi" && showMultiFilters && leadCaptured) {
+    return (
+      <div className="min-h-screen bg-background overflow-hidden">
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
+          <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
+            <button onClick={handleBack} className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-muted transition-colors">
+              <Tv className="w-5 h-5 text-primary" />
+              <span className="font-display font-bold text-sm text-foreground">WatchWhat?</span>
+            </button>
+            {playerEmail ? (
+              <button onClick={() => setShowSettings(true)} className="p-2 rounded-lg hover:bg-muted transition-colors">
+                <User className="w-5 h-5 text-muted-foreground" />
+              </button>
+            ) : (
+              <div className="w-10" />
+            )}
+          </div>
+        </div>
+        <FilterScreen onApply={handleMultiFiltersApplied} />
+      </div>
     );
   }
 
