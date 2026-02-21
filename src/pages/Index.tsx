@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Heart, Tv, Sparkles, ArrowRight, Users, MessageCircle, User, UserRound, Settings } from "lucide-react";
+import { Heart, Tv, Sparkles, ArrowRight, Users, MessageCircle, User, UserRound, Settings, LogIn, Loader2 } from "lucide-react";
 import heroImage from "@/assets/hero-couple.png";
 import SwipePage from "@/components/SwipePage";
 import CreateSession from "@/components/CreateSession";
@@ -8,7 +8,7 @@ import LeadCaptureForm from "@/components/LeadCaptureForm";
 import FilterScreen, { FilterSelections } from "@/components/FilterScreen";
 import SettingsPage from "@/components/SettingsPage";
 import WatchlistPage from "@/pages/WatchlistPage";
-import { createSession as createSessionApi, saveLocalSession, loadLocalSession, clearLocalSession } from "@/lib/session";
+import { createSession as createSessionApi, joinSession, saveLocalSession, loadLocalSession, clearLocalSession } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
 import { TmdbFilters } from "@/hooks/useTmdbShows";
 
@@ -31,6 +31,10 @@ const Index = () => {
   const [isNewUser, setIsNewUser] = useState(false);
   const [showMultiFilters, setShowMultiFilters] = useState(false);
   const [pendingFilters, setPendingFilters] = useState<TmdbFilters | null>(null);
+  const [joinCode, setJoinCode] = useState("");
+  const [joinError, setJoinError] = useState("");
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [playerRole, setPlayerRole] = useState<1 | 2>(1);
 
   // Restore session from localStorage on mount
   useEffect(() => {
@@ -126,12 +130,37 @@ const Index = () => {
     setShowCreate(true);
   };
 
+  const handleJoinByCode = async () => {
+    const trimmed = joinCode.trim().toUpperCase();
+    if (!trimmed) return;
+    setJoinError("");
+    setJoinLoading(true);
+    try {
+      const s = await joinSession(trimmed);
+      if (s) {
+        setSessionInfo(s);
+        setGameMode("multi");
+        setPlayerRole(2);
+        saveLocalSession({ id: s.id, code: s.code, player: 2, leadCaptured: true, firstName: playerName, email: playerEmail, mode: "multi", leadId: playerLeadId });
+      } else {
+        setJoinError("Session not found. Check the code and try again.");
+      }
+    } catch {
+      setJoinError("Something went wrong. Try again.");
+    } finally {
+      setJoinLoading(false);
+    }
+  };
+
   const handleBack = () => {
     setSessionInfo(null);
     setShowCreate(false);
     setShowMultiFilters(false);
     setPendingFilters(null);
     setGameMode(null);
+    setPlayerRole(1);
+    setJoinCode("");
+    setJoinError("");
     // Don't clear lead info — user stays "logged in"
   };
 
@@ -215,6 +244,40 @@ const Index = () => {
                 </div>
               </motion.button>
 
+              {/* Join a session by code */}
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-background px-3 text-muted-foreground">or join a session</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={joinCode}
+                  onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setJoinError(""); }}
+                  placeholder="Enter session code"
+                  maxLength={10}
+                  className="flex-1 px-4 py-3 rounded-xl border-2 border-border bg-card text-foreground font-mono text-center tracking-widest text-lg placeholder:text-muted-foreground placeholder:tracking-normal placeholder:font-sans placeholder:text-sm focus:outline-none focus:border-primary transition-colors"
+                />
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleJoinByCode}
+                  disabled={!joinCode.trim() || joinLoading}
+                  className="px-5 py-3 rounded-xl bg-accent text-accent-foreground font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                  {joinLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
+                  Join
+                </motion.button>
+              </div>
+              {joinError && (
+                <p className="text-destructive text-sm mt-1">{joinError}</p>
+              )}
+
               {playerEmail && !isNewUser && (
                 <>
                   <div className="relative my-6">
@@ -280,7 +343,7 @@ const Index = () => {
       <SwipePage
         sessionId={sessionInfo.id}
         sessionCode={sessionInfo.code}
-        player={1}
+        player={playerRole}
         playerName={playerName}
         onBack={handleBack}
         onOpenSettings={playerEmail ? () => setShowSettings(true) : undefined}
