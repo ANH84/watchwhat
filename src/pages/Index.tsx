@@ -25,6 +25,7 @@ const Index = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showWatchlist, setShowWatchlist] = useState(false);
   const [showLeadCapture, setShowLeadCapture] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   // Restore session from localStorage on mount
   useEffect(() => {
@@ -34,8 +35,9 @@ const Index = () => {
       setLeadCaptured(stored.leadCaptured);
       setPlayerName(stored.firstName || "");
       setPlayerEmail(stored.email || "");
-      setGameMode(stored.mode || "multi");
+      setGameMode(stored.mode || null);
       if (stored.leadId) setPlayerLeadId(stored.leadId);
+      setIsNewUser(false);
     }
   }, []);
 
@@ -44,10 +46,11 @@ const Index = () => {
     saveLocalSession({ id, code, player: 1, leadCaptured: true, firstName: playerName, email: playerEmail, mode: "multi", leadId: playerLeadId });
   };
 
-  const handleLeadComplete = async (firstName: string, email?: string, leadId?: string) => {
+  const handleLeadComplete = async (firstName: string, email?: string, leadId?: string, isReturning?: boolean) => {
     setLeadCaptured(true);
     setShowLeadCapture(false);
     setPlayerName(firstName);
+    setIsNewUser(!isReturning);
     if (email) setPlayerEmail(email);
     if (leadId) setPlayerLeadId(leadId);
     // Save a basic local session so user stays logged in
@@ -234,10 +237,10 @@ const Index = () => {
             className="text-center"
           >
             <h2 className="text-3xl font-display font-bold text-foreground mb-2">
-              Welcome back, {playerName}! 👋
+              {isNewUser ? `Hey ${playerName}! 🎬` : `Welcome back, ${playerName}! 👋`}
             </h2>
             <p className="text-muted-foreground mb-10">
-              What would you like to do?
+              {isNewUser ? "Pick a mode to start swiping" : "What would you like to do?"}
             </p>
 
             <div className="space-y-4">
@@ -271,7 +274,7 @@ const Index = () => {
                 </div>
               </motion.button>
 
-              {playerEmail && (
+              {playerEmail && !isNewUser && (
                 <>
                   <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
