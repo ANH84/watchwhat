@@ -74,6 +74,7 @@ export type Database = {
         Row: {
           code: string
           created_at: string
+          filters: Json | null
           id: string
           lead_id: string | null
           mode: string
@@ -81,6 +82,7 @@ export type Database = {
         Insert: {
           code: string
           created_at?: string
+          filters?: Json | null
           id?: string
           lead_id?: string | null
           mode?: string
@@ -88,6 +90,7 @@ export type Database = {
         Update: {
           code?: string
           created_at?: string
+          filters?: Json | null
           id?: string
           lead_id?: string | null
           mode?: string
