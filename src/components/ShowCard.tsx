@@ -87,35 +87,44 @@ const ShowCard = ({ show, onLike, onSkip, onNotTonight, wasNotTonight }: ShowCar
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-center gap-4 px-5 pb-6">
+        <div className="flex items-center justify-center gap-3 px-5 pb-6">
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onSkip}
-            className="w-12 h-12 rounded-full bg-muted flex items-center justify-center shadow-md hover:bg-destructive/10 transition-colors"
-            title="Not interested"
+            className="flex flex-col items-center gap-1"
+            title="Not for me"
           >
-            <X className="w-5 h-5 text-muted-foreground" />
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center shadow-md hover:bg-destructive/10 transition-colors">
+              <X className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <span className="text-[10px] text-muted-foreground font-medium">Not for me</span>
           </motion.button>
 
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onNotTonight}
-            className="w-12 h-12 rounded-full bg-secondary/20 border border-secondary/40 flex items-center justify-center shadow-md hover:bg-secondary/30 transition-colors"
+            className="flex flex-col items-center gap-1"
             title="Not tonight"
           >
-            <Clock className="w-5 h-5 text-secondary-foreground" />
+            <div className="w-12 h-12 rounded-full bg-secondary/20 border border-secondary/40 flex items-center justify-center shadow-md hover:bg-secondary/30 transition-colors">
+              <Clock className="w-5 h-5 text-secondary-foreground" />
+            </div>
+            <span className="text-[10px] text-muted-foreground font-medium">Maybe later</span>
           </motion.button>
           
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onLike}
-            className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
-            title="Love it"
+            className="flex flex-col items-center gap-1"
+            title="Yes!"
           >
-            <Heart className="w-7 h-7 text-primary-foreground" />
+            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow">
+              <Heart className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <span className="text-[10px] text-primary font-semibold">Yes!</span>
           </motion.button>
         </div>
       </div>
