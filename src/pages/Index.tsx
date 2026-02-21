@@ -250,7 +250,7 @@ const Index = () => {
                   <div className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs">
-                  <span className="bg-background px-3 text-muted-foreground">or join a session</span>
+                  <span className="bg-background px-3 text-muted-foreground">or join a game</span>
                 </div>
               </div>
 
@@ -259,7 +259,7 @@ const Index = () => {
                   type="text"
                   value={joinCode}
                   onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setJoinError(""); }}
-                  placeholder="Enter session code"
+                  placeholder="Enter game code"
                   maxLength={10}
                   className="flex-1 px-4 py-3 rounded-xl border-2 border-border bg-card text-foreground font-mono text-center tracking-widest text-lg placeholder:text-muted-foreground placeholder:tracking-normal placeholder:font-sans placeholder:text-sm focus:outline-none focus:border-primary transition-colors"
                 />
