@@ -165,9 +165,9 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
 
     // Player 1 saves filters to session so Player 2 gets the same titles
     if (player === 1) {
-      await supabase
-        .from("sessions")
-        .update({ filters: newFilters as any })
+      await (supabase
+        .from("sessions") as any)
+        .update({ filters: newFilters })
         .eq("id", sessionId);
     }
   };
@@ -176,13 +176,13 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
   useEffect(() => {
     if (player !== 2 || filters) return;
     const loadSessionFilters = async () => {
-      const { data } = await supabase
-        .from("sessions")
+      const { data } = await (supabase
+        .from("sessions") as any)
         .select("filters")
         .eq("id", sessionId)
         .single();
       if (data?.filters) {
-        setFilters(data.filters as unknown as TmdbFilters);
+        setFilters(data.filters as TmdbFilters);
       }
     };
     loadSessionFilters();
