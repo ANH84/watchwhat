@@ -1,23 +1,29 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Heart, Tv, Sparkles, ArrowRight, Users, MessageCircle, User } from "lucide-react";
+import { Heart, Tv, Sparkles, ArrowRight, Users, MessageCircle, User, UserRound } from "lucide-react";
 import heroImage from "@/assets/hero-couple.png";
 import SwipePage from "@/components/SwipePage";
 import CreateSession from "@/components/CreateSession";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
 import SettingsPage from "@/components/SettingsPage";
-import { saveLocalSession, loadLocalSession, clearLocalSession } from "@/lib/session";
+import WatchlistPage from "@/pages/WatchlistPage";
+import { createSession as createSessionApi, saveLocalSession, loadLocalSession, clearLocalSession } from "@/lib/session";
+
+type GameMode = "solo" | "multi" | null;
 
 const Index = () => {
   const [sessionInfo, setSessionInfo] = useState<{
     id: string;
     code: string;
   } | null>(null);
+  const [gameMode, setGameMode] = useState<GameMode>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [playerEmail, setPlayerEmail] = useState("");
+  const [playerLeadId, setPlayerLeadId] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [showWatchlist, setShowWatchlist] = useState(false);
 
   // Restore session from localStorage on mount
   useEffect(() => {
@@ -27,20 +33,51 @@ const Index = () => {
       setLeadCaptured(stored.leadCaptured);
       setPlayerName(stored.firstName || "");
       setPlayerEmail(stored.email || "");
+      setGameMode(stored.mode || "multi");
+      if (stored.leadId) setPlayerLeadId(stored.leadId);
     }
   }, []);
 
   const handleSessionCreated = (id: string, code: string) => {
     setSessionInfo({ id, code });
-    saveLocalSession({ id, code, player: 1, leadCaptured: false });
+    saveLocalSession({ id, code, player: 1, leadCaptured: false, mode: "multi" });
   };
 
-  const handleLeadComplete = (firstName: string, email?: string) => {
+  const handleLeadComplete = async (firstName: string, email?: string, leadId?: string) => {
     setLeadCaptured(true);
     setPlayerName(firstName);
     if (email) setPlayerEmail(email);
-    if (sessionInfo) {
-      saveLocalSession({ id: sessionInfo.id, code: sessionInfo.code, player: 1, leadCaptured: true, firstName, email });
+    if (leadId) setPlayerLeadId(leadId);
+
+    if (gameMode === "solo") {
+      // Auto-create a solo session
+      try {
+        const session = await createSessionApi("solo", leadId);
+        setSessionInfo({ id: session.id, code: session.code });
+        saveLocalSession({
+          id: session.id,
+          code: session.code,
+          player: 1,
+          leadCaptured: true,
+          firstName,
+          email,
+          mode: "solo",
+          leadId,
+        });
+      } catch {
+        // fallback
+      }
+    } else if (sessionInfo) {
+      saveLocalSession({
+        id: sessionInfo.id,
+        code: sessionInfo.code,
+        player: 1,
+        leadCaptured: true,
+        firstName,
+        email,
+        mode: "multi",
+        leadId,
+      });
     }
   };
 
@@ -50,11 +87,23 @@ const Index = () => {
     setLeadCaptured(false);
     setPlayerName("");
     setPlayerEmail("");
+    setPlayerLeadId("");
+    setGameMode(null);
     clearLocalSession();
   };
 
+  if (showWatchlist && playerEmail) {
+    return <WatchlistPage leadEmail={playerEmail} onBack={() => setShowWatchlist(false)} />;
+  }
+
   if (showSettings && playerEmail) {
-    return <SettingsPage leadEmail={playerEmail} onBack={() => setShowSettings(false)} />;
+    return (
+      <SettingsPage
+        leadEmail={playerEmail}
+        onBack={() => setShowSettings(false)}
+        onOpenWatchlist={() => { setShowSettings(false); setShowWatchlist(true); }}
+      />
+    );
   }
 
   if (sessionInfo && leadCaptured) {
@@ -66,11 +115,42 @@ const Index = () => {
         playerName={playerName}
         onBack={handleBack}
         onOpenSettings={playerEmail ? () => setShowSettings(true) : undefined}
+        mode={gameMode || "multi"}
       />
     );
   }
 
-  if (sessionInfo && !leadCaptured) {
+  // Lead capture screen (for both solo and multi after mode is chosen)
+  if (gameMode === "solo" && !leadCaptured) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="max-w-sm w-full">
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <Tv className="w-6 h-6 text-primary" />
+            <span className="font-display font-bold text-xl text-foreground">WatchWhat?</span>
+          </div>
+          <h2 className="text-2xl font-display font-bold text-foreground mb-2 text-center">
+            Solo Mode 🎬
+          </h2>
+          <p className="text-muted-foreground text-center text-sm mb-6">
+            Enter your details to start building your personal watchlist
+          </p>
+          <LeadCaptureForm
+            sessionId="solo-pending"
+            onComplete={handleLeadComplete}
+          />
+          <button
+            onClick={() => setGameMode(null)}
+            className="w-full text-center text-muted-foreground text-sm mt-4 hover:text-foreground transition-colors"
+          >
+            ← Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameMode === "multi" && sessionInfo && !leadCaptured) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="max-w-sm w-full">
@@ -109,14 +189,14 @@ const Index = () => {
       </nav>
 
       <main className="max-w-5xl mx-auto px-6 pt-8 pb-20">
-        {showCreate ? (
+        {gameMode === "multi" && showCreate ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="py-12"
           >
             <button
-              onClick={() => setShowCreate(false)}
+              onClick={() => { setShowCreate(false); setGameMode(null); }}
               className="text-muted-foreground text-sm mb-6 hover:text-foreground transition-colors"
             >
               ← Back
@@ -153,22 +233,34 @@ const Index = () => {
                 </h1>
 
                 <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-md">
-                  Create a session, share the link with your partner, and both swipe on shows
-                  whenever you have a moment. When you match — it's movie night! 🍿
+                  Swipe solo to build your personal watchlist, or play together and match on your next binge! 🍿
                 </p>
 
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setShowCreate(true)}
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-xl font-display font-bold text-lg shadow-lg hover:shadow-xl transition-shadow"
-                >
-                  Start a Session
-                  <ArrowRight className="w-5 h-5" />
-                </motion.button>
+                {/* Mode Selection Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setGameMode("solo")}
+                    className="inline-flex items-center justify-center gap-2 bg-card border-2 border-border text-foreground px-8 py-4 rounded-xl font-display font-bold text-lg shadow-md hover:shadow-lg hover:border-primary/50 transition-all"
+                  >
+                    <UserRound className="w-5 h-5" />
+                    Play Solo
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => { setGameMode("multi"); setShowCreate(true); }}
+                    className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-xl font-display font-bold text-lg shadow-lg hover:shadow-xl transition-shadow"
+                  >
+                    <Users className="w-5 h-5" />
+                    Play Together
+                    <ArrowRight className="w-5 h-5" />
+                  </motion.button>
+                </div>
 
                 {/* Stats */}
-                <div className="flex items-center gap-8 mt-10">
+                <div className="flex items-center gap-8 mt-2">
                   <div>
                     <div className="text-2xl font-display font-bold text-foreground flex items-center gap-1">
                       <MessageCircle className="w-5 h-5 text-primary" />
@@ -229,13 +321,13 @@ const Index = () => {
                 {[
                   {
                     icon: "📱",
-                    title: "Create a session",
-                    desc: "Tap 'Start a Session' to generate a unique code and shareable link.",
+                    title: "Choose your mode",
+                    desc: "Play solo to build your watchlist, or start a session to play with your partner.",
                   },
                   {
                     icon: "💬",
                     title: "Share via WhatsApp",
-                    desc: "Send the link to your partner. They open it and join instantly.",
+                    desc: "In multiplayer, send the link to your partner. They open it and join instantly.",
                   },
                   {
                     icon: "🎉",

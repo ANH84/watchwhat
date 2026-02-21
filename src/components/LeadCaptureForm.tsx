@@ -33,7 +33,7 @@ const COUNTRY_CODES = [
 
 interface LeadCaptureFormProps {
   sessionId: string;
-  onComplete: (firstName: string, email?: string) => void;
+  onComplete: (firstName: string, email?: string, leadId?: string) => void;
 }
 
 const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
@@ -92,15 +92,17 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
       }
 
       // Link this lead to the current session by inserting a new lead record
-      await supabase.from("leads").insert({
-        session_id: sessionId,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email,
-        mobile: data.mobile,
-      });
+      if (sessionId !== "solo-pending") {
+        await supabase.from("leads").insert({
+          session_id: sessionId,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          mobile: data.mobile,
+        });
+      }
 
-      onComplete(data.first_name, data.email);
+      onComplete(data.first_name, data.email, data.id);
     } catch {
       onComplete("Friend", "");
     }
@@ -120,7 +122,7 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
       const refCode = form.referral_code.trim().toUpperCase() || null;
 
       const insertData: any = {
-        session_id: sessionId,
+        session_id: sessionId === "solo-pending" ? null : sessionId,
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
         email,
@@ -131,7 +133,7 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
         insertData.referred_by = refCode;
       }
 
-      await supabase.from("leads").insert(insertData);
+      const { data: insertedLead } = await supabase.from("leads").insert(insertData).select("id").single();
 
       // Increment referral count for the referrer
       if (refCode) {
@@ -150,7 +152,7 @@ const LeadCaptureForm = ({ sessionId, onComplete }: LeadCaptureFormProps) => {
         }
       }
 
-      onComplete(form.first_name.trim(), email);
+      onComplete(form.first_name.trim(), email, insertedLead?.id);
     } catch {
       onComplete(form.first_name.trim() || "Friend", form.email.trim().toLowerCase());
     }

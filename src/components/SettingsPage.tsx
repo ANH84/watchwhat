@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Heart, CreditCard, Share2, Copy, Check, X } from "lucide-react";
+import { ArrowLeft, Heart, CreditCard, Share2, Copy, Check, X, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,9 +14,10 @@ const ALL_GENRES = [
 interface SettingsPageProps {
   leadEmail: string;
   onBack: () => void;
+  onOpenWatchlist?: () => void;
 }
 
-const SettingsPage = ({ leadEmail, onBack }: SettingsPageProps) => {
+const SettingsPage = ({ leadEmail, onBack, onOpenWatchlist }: SettingsPageProps) => {
   const [lead, setLead] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [favoriteGenres, setFavoriteGenres] = useState<Set<string>>(new Set());
@@ -175,7 +176,32 @@ const SettingsPage = ({ leadEmail, onBack }: SettingsPageProps) => {
           </div>
         </motion.section>
 
-        {/* Favourite Genre */}
+        {/* My Watchlist */}
+        {onOpenWatchlist && (
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="bg-card rounded-2xl border border-border p-5"
+          >
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onOpenWatchlist}
+              className="w-full flex items-center gap-3 text-left"
+            >
+              <div className="p-2 rounded-lg bg-primary/10">
+                <List className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-sm font-semibold text-foreground">My Watchlist</h2>
+                <p className="text-xs text-muted-foreground">View your liked & not tonight titles</p>
+              </div>
+              <span className="text-muted-foreground">→</span>
+            </motion.button>
+          </motion.section>
+        )}
+
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
