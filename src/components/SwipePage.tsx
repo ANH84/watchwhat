@@ -153,18 +153,43 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
     [currentShow, sessionId, player, partnerLikes]
   );
 
-  const handleFiltersApplied = (selections: FilterSelections) => {
-    setFilters({
+  const handleFiltersApplied = async (selections: FilterSelections) => {
+    const newFilters: TmdbFilters = {
       mediaType: selections.mediaType,
       providers: selections.providers,
       genres: selections.genres,
       languages: selections.languages,
-    });
+    };
+    setFilters(newFilters);
     setCurrentIndex(0);
+
+    // Player 1 saves filters to session so Player 2 gets the same titles
+    if (player === 1) {
+      await supabase
+        .from("sessions")
+        .update({ filters: newFilters as any })
+        .eq("id", sessionId);
+    }
   };
 
-  // Show filter screen first
-  if (!filters) {
+  // Player 2: load filters from session (skip FilterScreen)
+  useEffect(() => {
+    if (player !== 2 || filters) return;
+    const loadSessionFilters = async () => {
+      const { data } = await supabase
+        .from("sessions")
+        .select("filters")
+        .eq("id", sessionId)
+        .single();
+      if (data?.filters) {
+        setFilters(data.filters as unknown as TmdbFilters);
+      }
+    };
+    loadSessionFilters();
+  }, [player, sessionId, filters]);
+
+  // Show filter screen only for Player 1
+  if (!filters && player === 1) {
     return (
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
@@ -175,7 +200,7 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
             </button>
             <div className="text-center">
               <span className="text-sm font-semibold text-muted-foreground">
-                {player === 1 ? "💜" : "🧡"} {playerName || `Partner ${player}`}
+                💜 {playerName || "Partner 1"}
               </span>
               <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
                 Session: {sessionCode}
@@ -191,6 +216,18 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
           </div>
         </div>
         <FilterScreen onApply={handleFiltersApplied} />
+      </div>
+    );
+  }
+
+  // Player 2 waiting for filters to load from session
+  if (!filters && player === 2) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading session...</p>
+        </div>
       </div>
     );
   }
