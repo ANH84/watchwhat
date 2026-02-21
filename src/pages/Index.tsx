@@ -178,6 +178,22 @@ const Index = () => {
 
   // --- Subscreen renders ---
 
+  if (showWatchlist && playerEmail) {
+    return <WatchlistPage leadEmail={playerEmail} onBack={() => setShowWatchlist(false)} />;
+  }
+
+  if (showSettings && playerEmail) {
+    return (
+      <SettingsPage
+        leadEmail={playerEmail}
+        onBack={() => setShowSettings(false)}
+        onOpenWatchlist={() => { setShowSettings(false); setShowWatchlist(true); }}
+        onLogout={handleLogout}
+        onHome={() => { setShowSettings(false); setGameMode(null); }}
+      />
+    );
+  }
+
   // Mode selection takes priority — never skip this for users without an active game
   if (leadCaptured && !gameMode && !showCreate) {
     return (
@@ -289,22 +305,6 @@ const Index = () => {
           </motion.div>
         </main>
       </div>
-    );
-  }
-
-  if (showWatchlist && playerEmail) {
-    return <WatchlistPage leadEmail={playerEmail} onBack={() => setShowWatchlist(false)} />;
-  }
-
-  if (showSettings && playerEmail) {
-    return (
-      <SettingsPage
-        leadEmail={playerEmail}
-        onBack={() => setShowSettings(false)}
-        onOpenWatchlist={() => { setShowSettings(false); setShowWatchlist(true); }}
-        onLogout={handleLogout}
-        onHome={() => { setShowSettings(false); setGameMode(null); }}
-      />
     );
   }
 
