@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Users, Loader2, User } from "lucide-react";
+import { ArrowLeft, Users, Loader2, User, Heart, Clock } from "lucide-react";
 import ShowCard from "@/components/ShowCard";
 import MatchReveal from "@/components/MatchReveal";
 import FilterScreen, { FilterSelections } from "@/components/FilterScreen";
@@ -234,46 +234,131 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
             <h2 className="text-3xl font-display font-bold text-gradient mb-4">
               You're done! 🎬
             </h2>
-            {matches.length > 0 ? (
+
+            {mode === "solo" ? (
               <>
-                <p className="text-muted-foreground mb-8">
-                  You matched on {matches.length} show{matches.length > 1 ? "s" : ""}!
-                </p>
-                <div className="space-y-4">
-                  {matches.map((show) => (
-                    <div
-                      key={show.id}
-                      className="bg-card rounded-xl p-4 flex items-center gap-4 border border-border shadow-md"
-                    >
-                      <img
-                        src={show.poster}
-                        alt={show.title}
-                        className="w-16 h-20 rounded-lg object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = "/placeholder.svg";
-                        }}
-                      />
-                      <div className="text-left">
-                        <h4 className="font-display font-bold text-card-foreground">{show.title}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {show.platform} · {show.year}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {(() => {
+                  const likedShows = shows.filter((s) => myLikes.has(s.id));
+                  const notTonightShows = shows.filter((s) => notTonightIds.has(s.id));
+                  const hasAny = likedShows.length > 0 || notTonightShows.length > 0;
+
+                  return hasAny ? (
+                    <>
+                      <p className="text-muted-foreground mb-2">
+                        Great taste! Here's what caught your eye.
+                      </p>
+                      <p className="text-sm text-primary font-medium mb-8">
+                        ✨ These have been saved to your Watchlist
+                      </p>
+
+                      {likedShows.length > 0 && (
+                        <div className="mb-6">
+                          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-center gap-1.5">
+                            <Heart className="w-4 h-4 text-primary" /> Liked
+                          </h3>
+                          <div className="space-y-3">
+                            {likedShows.map((show) => (
+                              <div
+                                key={show.id}
+                                className="bg-card rounded-xl p-4 flex items-center gap-4 border border-border shadow-sm"
+                              >
+                                <img
+                                  src={show.poster}
+                                  alt={show.title}
+                                  className="w-14 h-20 rounded-lg object-cover"
+                                  onError={(e) => { e.currentTarget.src = "/placeholder.svg"; }}
+                                />
+                                <div className="text-left">
+                                  <h4 className="font-display font-bold text-card-foreground">{show.title}</h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {show.platform} · {show.year}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {notTonightShows.length > 0 && (
+                        <div className="mb-6">
+                          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-center gap-1.5">
+                            <Clock className="w-4 h-4 text-secondary" /> Not Tonight
+                          </h3>
+                          <div className="space-y-3">
+                            {notTonightShows.map((show) => (
+                              <div
+                                key={show.id}
+                                className="bg-card rounded-xl p-4 flex items-center gap-4 border border-border shadow-sm opacity-80"
+                              >
+                                <img
+                                  src={show.poster}
+                                  alt={show.title}
+                                  className="w-14 h-20 rounded-lg object-cover"
+                                  onError={(e) => { e.currentTarget.src = "/placeholder.svg"; }}
+                                />
+                                <div className="text-left">
+                                  <h4 className="font-display font-bold text-card-foreground">{show.title}</h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {show.platform} · {show.year}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground mb-6">
+                      You didn't save any shows this time. Try again with different filters!
+                    </p>
+                  );
+                })()}
               </>
             ) : (
-              <div>
-                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  No matches yet — your partner may still be swiping.
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Come back later to check for matches!
-                </p>
-              </div>
+              <>
+                {matches.length > 0 ? (
+                  <>
+                    <p className="text-muted-foreground mb-8">
+                      You matched on {matches.length} show{matches.length > 1 ? "s" : ""}!
+                    </p>
+                    <div className="space-y-4">
+                      {matches.map((show) => (
+                        <div
+                          key={show.id}
+                          className="bg-card rounded-xl p-4 flex items-center gap-4 border border-border shadow-md"
+                        >
+                          <img
+                            src={show.poster}
+                            alt={show.title}
+                            className="w-16 h-20 rounded-lg object-cover"
+                            onError={(e) => { e.currentTarget.src = "/placeholder.svg"; }}
+                          />
+                          <div className="text-left">
+                            <h4 className="font-display font-bold text-card-foreground">{show.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {show.platform} · {show.year}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      No matches yet — your partner may still be swiping.
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Come back later to check for matches!
+                    </p>
+                  </div>
+                )}
+              </>
             )}
+
             <button
               onClick={onBack}
               className="mt-8 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:shadow-lg transition-shadow"
