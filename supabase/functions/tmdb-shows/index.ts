@@ -103,15 +103,25 @@ Deno.serve(async (req) => {
       genreMap[g.id] = g.name;
     });
 
-    // Fetch watch providers for each show in parallel
+    // Fetch watch providers for each show in parallel — use same region as discovery filter
     const providerPromises = tmdbData.results.map(async (item: any) => {
       try {
         const provUrl = buildUrl(`/${media_type}/${item.id}/watch/providers`);
         const provRes = await fetch(provUrl, { headers: baseHeaders });
         const provData = await provRes.json();
-        const region = provData.results?.US || provData.results?.GB || provData.results?.AE || Object.values(provData.results || {})[0] as any;
+        // Only use the US region (matching watch_region in discovery) to stay consistent
+        const region = provData.results?.US;
         const flatrate = (region as any)?.flatrate || [];
-        return flatrate.map((p: any) => ({
+        // If user selected specific providers, prioritize those in the display order
+        const selectedSet = new Set(providers.map(String));
+        const sorted = [...flatrate].sort((a: any, b: any) => {
+          const aSelected = selectedSet.has(String(a.provider_id));
+          const bSelected = selectedSet.has(String(b.provider_id));
+          if (aSelected && !bSelected) return -1;
+          if (!aSelected && bSelected) return 1;
+          return 0;
+        });
+        return sorted.map((p: any) => ({
           name: p.provider_name,
           logo: p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : null,
         }));
