@@ -29,6 +29,15 @@ const Index = () => {
 
   // Restore session from localStorage on mount
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasRefCode = !!urlParams.get("ref");
+
+    // If arriving via referral link, skip session restore and show signup
+    if (hasRefCode) {
+      setShowLeadCapture(true);
+      return;
+    }
+
     const stored = loadLocalSession();
     if (stored && stored.player === 1) {
       setSessionInfo({ id: stored.id, code: stored.code });
