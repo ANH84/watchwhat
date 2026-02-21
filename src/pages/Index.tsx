@@ -278,35 +278,6 @@ const Index = () => {
                 <p className="text-destructive text-sm mt-1">{joinError}</p>
               )}
 
-              {playerEmail && !isNewUser && (
-                <>
-                  <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="bg-background px-3 text-muted-foreground">or</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setShowSettings(true)}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-border bg-card text-foreground font-medium text-sm hover:bg-muted transition-colors"
-                    >
-                      <Settings className="w-4 h-4 text-muted-foreground" />
-                      Settings
-                    </button>
-                    <button
-                      onClick={() => setShowWatchlist(true)}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-border bg-card text-foreground font-medium text-sm hover:bg-muted transition-colors"
-                    >
-                      <Heart className="w-4 h-4 text-primary" />
-                      Watchlist
-                    </button>
-                  </div>
-                </>
-              )}
 
               <button
                 onClick={handleLogout}
