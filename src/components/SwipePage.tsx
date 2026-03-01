@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Users, Loader2, User, Heart, Clock, Tv } from "lucide-react";
+import RandomSelector from "@/components/RandomSelector";
 import ShowCard from "@/components/ShowCard";
 import MatchReveal from "@/components/MatchReveal";
 import FilterScreen, { FilterSelections } from "@/components/FilterScreen";
@@ -410,6 +411,9 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
                         </div>
                       ))}
                     </div>
+                    {player === 1 && matches.length > 1 && (
+                      <RandomSelector matches={matches} onSelected={() => {}} />
+                    )}
                   </>
                 ) : (
                   <div>
