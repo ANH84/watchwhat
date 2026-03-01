@@ -343,7 +343,10 @@ const SwipePage = ({ sessionId, sessionCode, player, playerName, onBack, onOpenS
                                 </div>
                               </div>
                             ))}
-                          </div>
+                        </div>
+                    {likedShows.length > 1 && (
+                      <RandomSelector matches={likedShows} onSelected={() => {}} />
+                    )}
                         </div>
                       )}
 
