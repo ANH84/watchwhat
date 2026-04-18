@@ -41,7 +41,8 @@ const RandomSelector = ({ matches, onSelected }: RandomSelectorProps) => {
     const finalIndex = (totalSteps - 1) % matches.length;
 
     let step = 0;
-    const baseDelay = 80;
+    // 500ms pause on each title to build anticipation
+    const stepDelay = 500;
 
     const animate = () => {
       const currentIdx = step % matches.length;
@@ -49,17 +50,17 @@ const RandomSelector = ({ matches, onSelected }: RandomSelectorProps) => {
       step++;
 
       if (step <= totalSteps) {
-        // Slow down towards the end
+        // Slow down even more towards the very end for extra suspense
         const progress = step / totalSteps;
-        const delay = baseDelay + progress * progress * 400;
-        setTimeout(animate, delay);
+        const extraDelay = progress > 0.85 ? (progress - 0.85) * 4000 : 0;
+        setTimeout(animate, stepDelay + extraDelay);
       } else {
-        // Done — reveal the selected show
+        // Done — reveal the selected show after a final dramatic pause
         setHighlightIndex(finalIndex);
         setTimeout(() => {
           setSelectedShow(matches[finalIndex]);
           setIsSpinning(false);
-        }, 600);
+        }, 900);
       }
     };
 
