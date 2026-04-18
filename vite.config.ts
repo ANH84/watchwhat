@@ -4,7 +4,11 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
+// Set CAPACITOR=1 when building for native iOS/Android to disable PWA service worker
+const isCapacitor = process.env.CAPACITOR === "1";
+
 export default defineConfig(({ mode }) => ({
+  base: "./",
   server: {
     host: "::",
     port: 8080,
@@ -15,7 +19,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    VitePWA({
+    !isCapacitor && VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "placeholder.svg"],
       workbox: {
