@@ -33,15 +33,16 @@ const RandomSelector = ({ matches, onSelected }: RandomSelectorProps) => {
     setIsSpinning(true);
     setSelectedShow(null);
 
-    // Pick a random Fibonacci+1 number to determine total steps
-    const fibNumbers = getFibonacciPlusOne(100);
+    // Pick a random Fibonacci+1 number to determine total steps (capped for slower pacing)
+    const fibNumbers = getFibonacciPlusOne(15);
     const totalSteps = fibNumbers[Math.floor(Math.random() * fibNumbers.length)];
 
     // The final index after cycling through all matches
     const finalIndex = (totalSteps - 1) % matches.length;
 
     let step = 0;
-    const baseDelay = 80;
+    // 500ms pause on each title to build anticipation
+    const stepDelay = 500;
 
     const animate = () => {
       const currentIdx = step % matches.length;
@@ -49,17 +50,17 @@ const RandomSelector = ({ matches, onSelected }: RandomSelectorProps) => {
       step++;
 
       if (step <= totalSteps) {
-        // Slow down towards the end
+        // Slow down even more towards the very end for extra suspense
         const progress = step / totalSteps;
-        const delay = baseDelay + progress * progress * 400;
-        setTimeout(animate, delay);
+        const extraDelay = progress > 0.85 ? (progress - 0.85) * 4000 : 0;
+        setTimeout(animate, stepDelay + extraDelay);
       } else {
-        // Done — reveal the selected show
+        // Done — reveal the selected show after a final dramatic pause
         setHighlightIndex(finalIndex);
         setTimeout(() => {
           setSelectedShow(matches[finalIndex]);
           setIsSpinning(false);
-        }, 600);
+        }, 900);
       }
     };
 
