@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: 'app.lovable.watchwhat',
   appName: 'watchwhat',
   webDir: 'dist',
-  server: {
-    url: 'https://1e6ba7a3-735a-4a01-8035-16a7ab99ebdb.lovableproject.com?forceHideBadge=true',
-    cleartext: true,
-  },
 };
 
 export default config;
