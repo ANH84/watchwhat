@@ -33,8 +33,8 @@ const RandomSelector = ({ matches, onSelected }: RandomSelectorProps) => {
     setIsSpinning(true);
     setSelectedShow(null);
 
-    // Pick a random Fibonacci+1 number to determine total steps
-    const fibNumbers = getFibonacciPlusOne(100);
+    // Pick a random Fibonacci+1 number to determine total steps (capped for slower pacing)
+    const fibNumbers = getFibonacciPlusOne(15);
     const totalSteps = fibNumbers[Math.floor(Math.random() * fibNumbers.length)];
 
     // The final index after cycling through all matches
