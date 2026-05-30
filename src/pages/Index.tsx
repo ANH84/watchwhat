@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Heart, Tv, Sparkles, ArrowRight, Users, MessageCircle, User, UserRound, Settings, LogIn, Loader2 } from "lucide-react";
 import heroImage from "@/assets/hero-couple.png";
+import { Link } from "react-router-dom";
 import SwipePage from "@/components/SwipePage";
 import CreateSession from "@/components/CreateSession";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
