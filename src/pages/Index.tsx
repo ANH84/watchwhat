@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Heart, Tv, Sparkles, ArrowRight, Users, MessageCircle, User, UserRound, Settings, LogIn, Loader2 } from "lucide-react";
 import heroImage from "@/assets/hero-couple.png";
+import { Link } from "react-router-dom";
 import SwipePage from "@/components/SwipePage";
 import CreateSession from "@/components/CreateSession";
 import LeadCaptureForm from "@/components/LeadCaptureForm";
@@ -560,6 +561,16 @@ const Index = () => {
             ))}
           </div>
         </motion.section>
+
+        {/* Footer */}
+        <footer className="mt-20 pt-8 border-t border-border flex items-center justify-between">
+          <p className="text-muted-foreground text-xs">
+            &copy; 2026 WatchWhat?
+          </p>
+          <Link to="/privacy" className="text-muted-foreground text-xs hover:text-foreground transition-colors">
+            Privacy Policy
+          </Link>
+        </footer>
       </main>
     </div>
   );
