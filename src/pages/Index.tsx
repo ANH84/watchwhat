@@ -560,6 +560,16 @@ const Index = () => {
             ))}
           </div>
         </motion.section>
+
+        {/* Footer */}
+        <footer className="mt-20 pt-8 border-t border-border flex items-center justify-between">
+          <p className="text-muted-foreground text-xs">
+            &copy; 2026 WatchWhat?
+          </p>
+          <Link to="/privacy" className="text-muted-foreground text-xs hover:text-foreground transition-colors">
+            Privacy Policy
+          </Link>
+        </footer>
       </main>
     </div>
   );
