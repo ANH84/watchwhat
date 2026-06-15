@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.watchwhat',
+  appId: 'com.alexei.watchwhat',
   appName: 'watchwhat',
   webDir: 'dist',
 };
